@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BANANA ELITE STUDIO</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- Babel -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    /* TOOLTIP CSS */
+    .tooltip {
+      position: absolute;
+      white-space: nowrap;
+      background-color: #09090b;
+      color: #fbbf24;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(251,191,36,0.3);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 999;
+      pointer-events: none;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.8);
+      text-transform: none;
+      letter-spacing: normal;
+    }
+    .has-tooltip:hover > .tooltip { opacity: 1; visibility: visible; }
+    .tooltip-top { bottom: 100%; left: 50%; transform: translate(-50%, -8px); }
+    .has-tooltip:hover > .tooltip-top { transform: translate(-50%, -12px); }
+    .tooltip-bottom { top: 100%; left: 50%; transform: translate(-50%, 8px); }
+    .has-tooltip:hover > .tooltip-bottom { transform: translate(-50%, 12px); }
+    .tooltip-right { left: 100%; top: 50%; transform: translate(8px, -50%); }
+    .has-tooltip:hover > .tooltip-right { transform: translate(12px, -50%); }
+    .tooltip-left { right: 100%; top: 50%; transform: translate(-8px, -50%); }
+    .has-tooltip:hover > .tooltip-left { transform: translate(-12px, -50%); }
+
+    /* SCROLLBAR */
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(251,191,36,0.1); border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+    @keyframes fade-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-in { animation: fade-in 0.3s ease-out forwards; }
+    
+    /* SLIDERS */
+    input[type="range"].styled-slider { -webkit-appearance: none; background: rgba(255,255,255,0.1); border-radius: 10px; height: 3px; }
+    input[type="range"].styled-slider::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #fff; cursor: pointer; border: 2px solid #09090b; transition: background 0.2s; }
+    input[type="range"].styled-slider:active::-webkit-slider-thumb { background: #fbbf24; }
+    
+    /* HIDE NUMBER INPUT ARROWS */
+    input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; }
+
+    @keyframes marching-ants {
+      to { stroke-dashoffset: -10; }
+    }
+    .ants-black {
+      stroke: #000; stroke-width: 1.5px; stroke-dasharray: 5, 5; animation: marching-ants 0.5s linear infinite; fill: rgba(251,191,36,0.15);
+    }
+    .ants-white {
+      stroke: #fff; stroke-width: 1.5px; stroke-dasharray: 5, 5; stroke-dashoffset: 5; animation: marching-ants 0.5s linear infinite; fill: none;
+    }
+
+    /* Split slider specific */
+    input[type="range"].split-slider { -webkit-appearance: none; background: transparent; height: 100%; width: 100%; position: absolute; inset: 0; z-index: 50; outline: none; margin: 0; }
+    input[type="range"].split-slider::-webkit-slider-thumb { -webkit-appearance: none; height: 100vh; width: 40px; background: transparent; cursor: ew-resize; }
+    
+    select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23fbbf24'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; }
+    
+    textarea { resize: vertical; }
+  </style>
+</head>
+<body class="bg-[#09090b] text-slate-200 m-0 overflow-hidden font-sans">
+  
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // --- Configuration & Traductions ---
+    const TRANSLATIONS = {
+      en: {
+        title: "BANANA", subtitle: "ELITE STUDIO",
+        nav: { assets: "Assets", studio: "Studio", composer: "Composer", history: "History", settings: "Config" },
+        api: { label: "Gemini API Key", test: "Test Connection", secure: "API Security" },
+        params: { temp: "Creativity (Temp)", topP: "Precision (TopP)", safety: "Safety Guard" },
+        limits: { daily: "Daily Budget", min: "Calls / Min", hour: "Calls / Hour" },
+        composer: { camera: "Lens / Camera", lighting: "Lighting", mood: "Mood", artist: "Artist", render: "Render Engine", film: "Film Stock" },
+        studio: { brush: "Brush", eraser: "Eraser", pan: "Pan", autoMask: "Auto-Subject", split: "Split View", size: "Size", opac: "Opacity", compare: "Hold to Compare", styleRef: "Image B: Style Transfer", outpaint: "Outpaint", softness: "Softness", selection: "Selection Tools" },
+        generate: "Process", build: "Build Prompt", analyze: "Analyze DNA", ready: "System Ready",
+        presets: "Style Presets", savePreset: "Save Settings", loadPreset: "Load",
+        placeholder: "Describe exactly what you want to change, enhance, or create...",
+        enhancers: { upscale: "Ultra-Res 8K", raw: "RAW Photo", face: "Preserve Identity", isolate: "Isolate Subject" },
+        tooltips: {
+          navAssets: "Manage your source images", navStudio: "Main image editing workspace", navComposer: "Advanced prompt matrix builder",
+          navHistory: "View previous generations", navSettings: "API and engine parameters", upload: "Click or drag & drop images here",
+          format: "Select output aspect ratio", outpaint: "Extend background seamlessly without cropping", brush: "Paint mask for local edits",
+          eraser: "Erase parts of your mask", pan: "Hold SPACE to move around", autoMask: "AI Auto-select main subject", zoom: "Adjust canvas zoom level",
+          undo: "Undo last brush stroke (Ctrl+Z)", clear: "Clear the prompt input", save: "Download with embedded Metadata",
+          process: "Start the AI generation process", analyze: "Extract prompt and style from image", split: "Toggle Before/After comparison",
+          upscale: "Force extreme detail & 8K resolution", raw: "Force a photorealistic look", face: "Keep original facial features intact", isolate: "Remove background and isolate subject", reset: "Clear workspace and start over",
+          langEN: "Switch to English", langFR: "Passer en Français",
+          temp: "Higher values allow the AI to be more creative and random. Lower values make it more strict and precise.",
+          topP: "Limits the pool of visual tokens the AI can choose from. Lower means more predictable.",
+          safety: "Google's internal filter to block inappropriate, violent, or unsafe generations.",
+          dailyBudget: "Protects you from excessive API costs by setting a virtual daily cap.",
+          callsMin: "Rate limit setting to avoid overloading the API servers.",
+          selection: "Lasso, Rectangle, Ellipse Marquee",
+          tokens: "Estimated API Tokens Used",
+          images: "Safe Daily Image Quota (100 Max)"
+        },
+        tips: [
+          "Shortcuts: [-] and [+] for brush size, [B] for Brush, [E] for Eraser.",
+          "Hold Alt+Cmd & Drag Mouse to dynamically adjust Brush Size & Softness!",
+          "Use 'Analyze DNA' in Composer to extract the style of any uploaded image.",
+          "Hold Alt to Subtract from Mask/Selection, Hold Shift to Add.",
+          "Use 'Auto-Subject' in Studio to let AI draw the mask for you."
+        ]
+      },
+      fr: {
+        title: "BANANA", subtitle: "ELITE STUDIO",
+        nav: { assets: "Médias", studio: "Studio", composer: "Composeur", history: "Historique", settings: "Config" },
+        api: { label: "Clé API Gemini", test: "Tester Connexion", secure: "Sécurité API" },
+        params: { temp: "Créativité (Temp)", topP: "Précision (TopP)", safety: "Filtres Sécurité" },
+        limits: { daily: "Budget Journalier", min: "Appels / Min", hour: "Appels / Heure" },
+        composer: { camera: "Objectif / Caméra", lighting: "Éclairage", mood: "Ambiance", artist: "Artiste", render: "Moteur Rendu", film: "Pellicule" },
+        studio: { brush: "Pinceau", eraser: "Gomme", pan: "Main", autoMask: "Auto-Sujet", split: "Vue Avant/Après", size: "Taille", opac: "Opacité", compare: "Maintenir pour Comparer", styleRef: "Image B : Transfert Style", outpaint: "Extension Décor", softness: "Flou des bords", selection: "Outils de Sélection" },
+        generate: "Générer", build: "Créer Prompt", analyze: "Analyser ADN", ready: "Système Prêt",
+        presets: "Préréglages (Presets)", savePreset: "Sauvegarder", loadPreset: "Charger",
+        placeholder: "Décrivez précisément ce que vous souhaitez modifier ou créer...",
+        enhancers: { upscale: "Ultra-Res 8K", raw: "Photo RAW", face: "Préserver Visage", isolate: "Détourer Sujet" },
+        tooltips: {
+          navAssets: "Gérer vos images sources", navStudio: "Espace principal d'édition", navComposer: "Matrice de prompt avancée",
+          navHistory: "Voir les générations précédentes", navSettings: "Paramètres de l'API et du moteur", upload: "Cliquez ou glissez vos images ici",
+          format: "Sélectionner le format de sortie", outpaint: "Étendre le décor sans rogner l'image", brush: "Peindre un masque pour éditer",
+          eraser: "Effacer des zones du masque", pan: "Maintenir ESPACE pour se déplacer", autoMask: "L'IA sélectionne le sujet principal", zoom: "Ajuster le niveau de zoom",
+          undo: "Annuler le dernier trait (Ctrl+Z)", clear: "Effacer les directives texte", save: "Télécharger avec Métadonnées intégrées",
+          process: "Lancer la génération par l'IA", analyze: "Extraire le style et prompt de l'image", split: "Activer le curseur Avant/Après",
+          upscale: "Forcer un niveau de détail extrême (8K)", raw: "Forcer un rendu photographique naturel", face: "Garder les traits du visage originaux", isolate: "Supprimer le fond et isolate le sujet", reset: "Nettoyer l'espace et recommencer",
+          langEN: "Switch to English", langFR: "Passer en Français",
+          temp: "Une valeur élevée rend l'IA plus créative et libre. Une valeur basse la rend plus stricte et fidèle.",
+          topP: "Définit la diversité du vocabulaire visuel de l'IA. Un score bas garantit la cohérence.",
+          safety: "Filtre interne de Google qui bloque la génération de contenus sensibles ou inappropriés.",
+          dailyBudget: "Limite de dépense virtuelle pour éviter les surcoûts sur votre compte API.",
+          callsMin: "Règle le nombre de requêtes par minute pour éviter de surcharger les serveurs.",
+          selection: "Lasso, Rectangle, Ellipse de sélection",
+          tokens: "Estimation des Jetons API consommés",
+          images: "Quota Journalier Sécurisé (Max 100)"
+        },
+        tips: [
+          "Raccourcis : [-] et [+] pour la taille du pinceau, [B] Pinceau, [E] Gomme.",
+          "Maintenez Alt+Cmd enfoncés et glissez la souris pour régler Pinceau et Flou !",
+          "Bouton 'Analyser ADN' : extrait la matrice de style d'une photo uploadée.",
+          "Maintenez Alt pour Soustraire au masque/sélection, Maj pour Ajouter.",
+          "Utilisez 'Auto-Sujet' dans Studio pour que l'IA crée le masque à votre place."
+        ]
+      }
+    };
+
+    const COMPOSER_MATRIX = {
+      camera: ["100mm Macro", "12mm Ultra Wide", "14mm Wide Angle", "200mm Telephoto", "20mm Wide", "24mm Prime", "35mm Prime", "400mm Super Telephoto", "50mm Standard", "85mm Portrait", "8mm Fisheye", "CCTV Style", "Cinematic Crane", "Dashcam POV", "Drone Aerial View", "GoPro Action", "Pinhole Camera", "Polaroid", "Tilt-Shift", "Webcam POV"],
+      lighting: ["Backlit Silhouette", "Bioluminescence", "Blue Hour", "Bokeh Light", "Candlelight", "Chiaroscuro", "Cinematic Lighting", "Cyberpunk Neon", "Ethereal Glow", "Golden Hour", "Hard Flash", "High Key", "Low Key", "Moody Atmospheric", "Natural Sunlight", "Rembrandt Lighting", "Soft Studio Box", "Split Lighting", "Tungsten Warmth", "Volumetric God Rays"],
+      mood: ["Aggressive", "Apocalyptic", "Calm & Serene", "Cyber & Tech", "Dark Fantasy", "Dramatic & Dark", "Dreamy & Ethereal", "Epic & Monumental", "Euphoric", "Gritty Realism", "High Fashion", "Joyful & Vibrant", "Melancholic", "Minimalist Bright", "Mysterious", "Nostalgic Vintage", "Peaceful", "Psychedelic", "Romantic", "Suspenseful"],
+      artist: ["Aaron Horkey", "Akihiko Yoshida", "Alphonse Mucha", "Andy Warhol", "Annie Leibovitz", "Ansel Adams", "Artgerm", "Banksy", "Bastien Lecouffe Deharme", "Beksiński", "Caravaggio", "Claude Monet", "Craig Mullins", "Da Vinci", "Dan Mumford", "David Hockney", "Diego Velázquez", "Edgar Degas", "Edward Hopper", "Frida Kahlo", "Greg Rutkowski", "Gregory Crewdson", "Gustave Doré", "Hayao Miyazaki", "Hieronymus Bosch", "HR Giger", "Ilya Kuvshinov", "Ivan Aivazovsky", "J.M.W. Turner", "Jackson Pollock", "James Gurney", "Jean Giraud (Moebius)", "John Berkey", "John Singer Sargent", "Katsushika Hokusai", "Katsuhiro Otomo", "Krenz Cushart", "Leonardo da Vinci", "Lois van Baarle", "Makoto Shinkai", "Marc Simonetti", "Mark Rothko", "Michelangelo", "Norman Rockwell", "Pablo Picasso", "Paul Cézanne", "Peter Mohrbacher", "Rembrandt", "René Magritte", "Roger Deakins", "Ross Tran", "Ruan Jia", "Salvador Dalí", "Syd Mead", "Titian", "Vincent van Gogh", "Wassily Kandinsky", "Wes Anderson", "WLOP", "Yoshitaka Amano"],
+      render: ["3Delight", "Arnold Render", "Blender Cycles", "Cinema4D", "Corona Render", "CryEngine", "Eevee", "Enscape", "Guerilla Render", "Indigo Renderer", "Keyshot", "LuxCoreRender", "Mantra", "Maxwell Render", "Mental Ray", "Octane Render", "Path Traced", "Redshift", "Unreal Engine 5", "V-Ray"],
+      film: ["Agfa Vista 400", "Cinestill 800T", "Fujifilm Astia", "Fujifilm Provia", "Fujifilm Superia", "Fujifilm Velvia", "Ilford Delta 3200", "Ilford HP5", "Kodak Ektar", "Kodak Gold 200", "Kodak Portra 160", "Kodak Portra 400", "Kodak Portra 800", "Kodak Tri-X", "Lomography Color", "Polaroid 600", "Polaroid SX-70", "Rollei Retro", "VHS Aesthetic", "Wet Plate Collodion"]
+    };
+
+    const CATEGORIES = [
+      { id: 'retouch', label: { en: 'Face & Body', fr: 'Visage & Corps' }, icon: "ph-sparkle", 
+        options: {
+          en: ["Add Freckles", "Add Makeup", "Change Eye Color", "Change Hair Color", "Contour Jawline", "Enhance Eyes", "Fix Red Eyes", "Plump Lips", "Reduce Wrinkles", "Remove Blemishes", "Smooth Skin", "Whiten Teeth"],
+          fr: ["Ajouter Taches de Rousseur", "Ajouter Maquillage", "Changer Couleur des Yeux", "Changer Couleur des Cheveux", "Contour Mâchoire", "Améliorer Yeux", "Corriger Yeux Rouges", "Repulper Lèvres", "Réduire Rides", "Enlever Imperfections", "Lisser Peau", "Blanchir Dents"]
+        }
+      },
+      { id: 'fashion', label: { en: 'Apparel', fr: 'Vêtements' }, icon: "ph-t-shirt", 
+        options: {
+          en: ["Add Accessories", "Add Jewelry", "Add Patterns", "Change Fabric Texture", "Change Garment Style", "Enhance Details", "Iron Wrinkles", "Make Clothes Transparent", "Recolor Garment", "Remove Logos", "Swap Outfit", "Tailor Fit"],
+          fr: ["Ajouter Accessoires", "Ajouter Bijoux", "Ajouter Motifs", "Changer Texture Tissu", "Changer Style Vêtement", "Améliorer Détails", "Repasser Plis", "Rendre Vêtement Transparent", "Recolorer Vêtement", "Enlever Logos", "Changer Tenue", "Ajuster Taille"]
+        }
+      },
+      { id: 'arch', label: { en: 'Architecture', fr: 'Architecture' }, icon: "ph-buildings", 
+        options: {
+          en: ["Add Greenery", "Add Interior Furniture", "Change Building Material", "Clean Facade", "Clean Streets", "Day to Night Transition", "Enhance Windows", "Fix Symmetry", "Modernize Structure", "Remove Scaffolding", "Remove Wiring", "Restore Ruins"],
+          fr: ["Ajouter Végétation", "Ajouter Meubles Intérieurs", "Changer Matériau Bâtiment", "Nettoyer Façade", "Nettoyer Rues", "Transition Jour Nuit", "Améliorer Fenêtres", "Corriger Symétrie", "Moderniser Structure", "Enlever Échafaudages", "Enlever Câbles", "Restaurer Ruines"]
+        }
+      },
+      { id: 'env', label: { en: 'Environment', fr: 'Environnement' }, icon: "ph-mountains", 
+        options: {
+          en: ["Add Bokeh (Depth Blur)", "Add Clouds", "Add Fog/Mist", "Add Rain/Snow", "Add Studio Backdrop", "Change Season", "Change Weather", "Enhance Foliage", "Make Background Black", "Remove Background", "Replace Sky", "Urbanize Scene"],
+          fr: ["Ajouter Bokeh (Flou)", "Ajouter Nuages", "Ajouter Brouillard", "Ajouter Pluie/Neige", "Ajouter Fond Studio", "Changer Saison", "Changer Météo", "Améliorer Feuillage", "Fond Noir", "Supprimer Fond", "Remplacer Ciel", "Urbaniser Scène"]
+        }
+      },
+      { id: 'obj', label: { en: 'Objects', fr: 'Objets' }, icon: "ph-scissors", 
+        options: {
+          en: ["Add Reflections", "Add Shadow", "Change Material", "Change Object Color", "Clean Erase", "Duplicate Object", "Enhance Texture", "Insert New Element", "Isolate Object", "Move Object", "Replace Object", "Scale/Resize Object"],
+          fr: ["Ajouter Reflets", "Ajouter Ombre", "Changer Matériau", "Changer Couleur Objet", "Effacer Proprement", "Dupliquer Objet", "Améliorer Texture", "Insérer Nouvel Élément", "Isoler Objet", "Déplacer Objet", "Remplacer Objet", "Redimensionner Objet"]
+        }
+      },
+      { id: 'light', label: { en: 'Lighting FX', fr: 'Effets Lumière' }, icon: "ph-sun", 
+        options: {
+          en: ["Add God Rays", "Add Lens Flare", "Brighten Shadows", "Change Light Color", "Cinematic Relighting", "Darken Highlights", "Enhance Contrast", "Fix Exposure", "High Key Lighting", "Low Key Lighting", "Neon Glow", "Soften Lighting"],
+          fr: ["Ajouter Rayons de Lumière", "Ajouter Lens Flare", "Éclaircir Ombres", "Changer Couleur Lumière", "Rééclairage Cinématique", "Assombrir Hautes Lumières", "Améliorer Contraste", "Corriger Exposition", "Éclairage High Key", "Éclairage Low Key", "Lueur Néon", "Adoucir Lumière"]
+        }
+      },
+      { id: 'styles', label: { en: 'Aesthetics', fr: 'Esthétique' }, icon: "ph-palette", 
+        options: {
+          en: ["3D Render", "Anime / Manga", "Charcoal Drawing", "Cinematic Grade", "Cyberpunk", "Noir / B&W", "Oil Painting", "Pixel Art", "Pop Art", "Synthwave", "Vintage 35mm", "Watercolor"],
+          fr: ["Rendu 3D", "Anime / Manga", "Dessin Fusain", "Étalonnage Cinéma", "Cyberpunk", "Noir & Blanc", "Peinture Huile", "Pixel Art", "Pop Art", "Synthwave", "Vintage 35mm", "Aquarelle"]
+        }
+      }
+    ];
+
+    const RATIOS = [
+      { id: '1:1', label: '1:1 Square', icon: "ph-frame-corners", class: 'aspect-square' }, { id: '16:9', label: '16:9 Landscape', icon: "ph-monitor", class: 'aspect-video' },
+      { id: '9:16', label: '9:16 Vertical', icon: "ph-device-mobile", class: 'aspect-[9/16]' }, { id: '4:3', label: '4:3 Standard', icon: "ph-monitor", class: 'aspect-[4/3]' },
+      { id: '3:4', label: '3:4 Portrait', icon: "ph-device-mobile", class: 'aspect-[3/4]' }, { id: '3:2', label: '3:2 Classic', icon: "ph-image", class: 'aspect-[3/2]' },
+      { id: '2:3', label: '2:3 Classic Port.', icon: "ph-image", class: 'aspect-[2/3]' }, { id: '5:4', label: '5:4 Medium', icon: "ph-image", class: 'aspect-[5/4]' },
+      { id: '4:5', label: '4:5 Medium Port.', icon: "ph-image", class: 'aspect-[4/5]' }, { id: '16:10', label: '16:10 Display', icon: "ph-monitor", class: 'aspect-[16/10]' },
+      { id: '10:16', label: '10:16 Display Port.', icon: "ph-device-mobile", class: 'aspect-[10/16]' }, { id: '21:9', label: '21:9 Ultrawide', icon: "ph-monitor", class: 'aspect-[21/9]' },
+      { id: '9:21', label: '9:21 Ultra Vert.', icon: "ph-device-mobile", class: 'aspect-[9/21]' }, { id: '2:1', label: '2:1 Panoramic', icon: "ph-monitor", class: 'aspect-[2/1]' },
+      { id: '1:2', label: '1:2 Tall', icon: "ph-device-mobile", class: 'aspect-[1/2]' }, { id: '3:1', label: '3:1 Ultra Pan', icon: "ph-monitor", class: 'aspect-[3/1]' },
+      { id: '1:3', label: '1:3 Skyscraper', icon: "ph-device-mobile", class: 'aspect-[1/3]' }
+    ];
+
+    const BRUSH_COLORS = [
+      { id: 'amber', value: 'rgba(251, 191, 36, 1)', bg: 'bg-amber-400' },
+      { id: 'white', value: 'rgba(255, 255, 255, 1)', bg: 'bg-white' },
+      { id: 'red', value: 'rgba(239, 68, 68, 1)', bg: 'bg-red-500' },
+      { id: 'blue', value: 'rgba(59, 130, 246, 1)', bg: 'bg-blue-500' }
+    ];
+
+    const QUICK_TAGS = {
+      en: ["8K Resolution", "Cinematic", "Ray-Tracing", "Hyper-Realistic", "Masterpiece", "Unreal Engine 5", "Volumetric Lighting", "Kodak Portra"],
+      fr: ["Résolution 8K", "Cinématique", "Ray-Tracing", "Hyper-Réaliste", "Chef-d'œuvre", "Unreal Engine 5", "Lumière Volumétrique", "Kodak Portra"]
+    };
+
+    const BananaIcon = ({className}) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M4 13c3.5-2 8-2 10 2a9.5 9.5 0 0 1 8 5"/>
+        <path d="M5.15 17.89c5.52-1.52 8.65-6.89 7-12C11.55 4 11.5 2 13 2c3.22 0 5 5.5 5 8 0 5.95-6 10.81-11.53 10.81A10.64 10.64 0 0 1 2 16s5-2 3.15-1.89z"/>
+      </svg>
+    );
+
+    // --- SYSTEME DE REQUETE AVEC BACKOFF (ANTI-CRASH ET ANTI-SPIN) ---
+    const fetchWithBackoff = async (url, options = {}, isImage = false) => {
+      const delays = [1000, 2000, 4000, 8000, 16000]; // Exponential backoff
+      let lastError = null;
+      
+      for (let i = 0; i <= delays.length; i++) {
+        try {
+          const controller = new AbortController();
+          // Timeout étendu à 45 secondes pour l'image
+          const timeoutId = setTimeout(() => controller.abort(), isImage ? 45000 : 15000);
+          
+          const response = await fetch(url, { ...options, signal: controller.signal });
+          clearTimeout(timeoutId);
+          
+          if (!response.ok) {
+            let errMsg = `HTTP_${response.status}`;
+            try {
+              const errData = await response.json();
+              if (errData.error?.message) errMsg = errData.error.message;
+            } catch(e) {}
+            throw new Error(errMsg);
+          }
+          
+          return response; // Return full response object to parse json cleanly later
+        } catch (e) {
+          lastError = e;
+          const errText = (e.message || "").toLowerCase();
+          
+          // On n'insiste pas si la clé est bloquée ou si l'argument est invalide
+          if (e.name !== 'AbortError' && (errText.includes('api key') || errText.includes('invalid_argument') || errText.includes('not valid') || errText.includes('not found'))) {
+            throw e; 
+          }
+          
+          // Sinon, on attend et on réessaie (Backoff)
+          if (i < delays.length) {
+            await new Promise(r => setTimeout(r, delays[i]));
+          }
+        }
+      }
+      throw lastError; // Si toutes les tentatives échouent, on balance l'erreur
+    };
+
+    const App = () => {
+      const [lang, setLang] = useState('en');
+      const [activeTab, setActiveTab] = useState('settings'); 
+      const [apiKey, setApiKey] = useState("");
+      const [showKey, setShowKey] = useState(false);
+      const [apiStatus, setApiStatus] = useState('untested');
+      
+      const [images, setImages] = useState([]);
+      const [selectedImageIndex, setSelectedImageIndex] = useState(null);
+      const [historyLogs, setHistoryLogs] = useState([]); 
+      
+      const [status, setStatus] = useState('idle');
+      const [statusMessage, setStatusMessage] = useState("");
+      const [imageResult, setImageResult] = useState(null);
+      const [promptResult, setPromptResult] = useState("");
+      const [instruction, setInstruction] = useState("");
+      const [enableOutpainting, setEnableOutpainting] = useState(false); 
+      const [styleRefIndex, setStyleRefIndex] = useState(null); 
+      
+      const [isConsoleExpanded, setIsConsoleExpanded] = useState(true); 
+      const [zoomMenuOpen, setZoomMenuOpen] = useState(false);
+      const [selectMenuOpen, setSelectMenuOpen] = useState(false);
+      const [toolbarPos, setToolbarPos] = useState({ x: 24, y: 100 });
+      const [isDraggingToolbar, setIsDraggingToolbar] = useState(false);
+      const toolbarRef = useRef(null);
+      const dragOffset = useRef({ x: 0, y: 0 });
+      const [isSplitMode, setIsSplitMode] = useState(false);
+      const [splitPosition, setSplitPosition] = useState(50);
+      const [canvasHistory, setCanvasHistory] = useState([]);
+      const [toastMsg, setToastMsg] = useState("");
+      const [presets, setPresets] = useState([]);
+      
+      // NOUVEAUX ÉTATS POUR LA POP-UP MODAL (Rendu Image)
+      const [showModal, setShowModal] = useState(false);
+      const [modalImage, setModalImage] = useState(null);
+      
+      // AUTO-DETECT MODEL SCANNER STATE
+      const [availableModels, setAvailableModels] = useState([]);
+      const [selectedModel, setSelectedModel] = useState('gemini-1.5-flash');
+      
+      const [enhancers, setEnhancers] = useState({ upscale: false, raw: false, face: false, isolate: false });
+      const [matrixSelection, setMatrixSelection] = useState({ camera: "", lighting: "", mood: "", artist: "", render: "", film: "" });
+      const [advancedParams, setAdvancedParams] = useState({ temp: 0.7, topP: 0.9, safety: 'std', dailyBudget: 500000, callsMin: 10, callsHour: 60 });
+      
+      const [sidebarWidth, setSidebarWidth] = useState(288);
+      const [isResizingSidebar, setIsResizingSidebar] = useState(false);
+      const [zoom, setZoom] = useState(1);
+      const [toolMode, setToolMode] = useState('brush'); 
+      const [isSpaceDown, setIsSpaceDown] = useState(false);
+      const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+      const [brushOpacity, setBrushOpacity] = useState(0.5);
+      const [brushSize, setBrushSize] = useState(35);
+      const [brushSoftness, setBrushSoftness] = useState(0);
+      const [brushColor, setBrushColor] = useState(BRUSH_COLORS[0]);
+      const [activeAction, setActiveAction] = useState(null);
+      const [activeRatio, setActiveRatio] = useState(RATIOS[0]);
+      const [ratioMenuOpen, setRatioMenuOpen] = useState(false); 
+      
+      const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
+      const [isMouseDown, setIsMouseDown] = useState(false);
+      
+      // NOUVEAUX ÉTATS POUR LES COMPTEURS
+      const [tokensUsed, setTokensUsed] = useState(0);
+      const [imagesGenerated, setImagesGenerated] = useState(0);
+      
+      const [isDragging, setIsDragging] = useState(false);
+      const [isGlobalDragging, setIsGlobalDragging] = useState(false);
+      
+      const [modifiers, setModifiers] = useState({ shift: false, alt: false, ctrl: false });
+      const activeModifiersRef = useRef({ shift: false, alt: false, ctrl: false });
+      const [isAdjustingBrush, setIsAdjustingBrush] = useState(false);
+      const selectionModeRef = useRef('add');
+
+      const [selectionStart, setSelectionStart] = useState(null);
+      const [selectionCurrent, setSelectionCurrent] = useState(null);
+      const selectionPointsRef = useRef([]);
+      const currentStrokeRef = useRef([]);
+      const overlayCanvasRef = useRef(null);
+      const [canvasRes, setCanvasRes] = useState({w: 1024, h: 1024});
+
+      useEffect(() => {
+          const [w, h] = activeRatio.id.split(':').map(Number);
+          if (w > h) {
+              setCanvasRes({ w: 1024, h: Math.round(1024 * (h/w)) });
+          } else {
+              setCanvasRes({ w: Math.round(1024 * (w/h)), h: 1024 });
+          }
+      }, [activeRatio]);
+
+      const canvasRef = useRef(null);
+      const containerRef = useRef(null);
+      const lastMousePos = useRef({ x: 0, y: 0 });
+      const t = TRANSLATIONS[lang];
+      const [currentTip, setCurrentTip] = useState(0);
+
+      // Translation Reciprocity Hook - SAFE SPLIT & JOIN INSTEAD OF REGEX
+      useEffect(() => {
+        let newInst = instruction;
+        const sourceLang = lang === 'fr' ? 'en' : 'fr';
+        const targetLang = lang;
+
+        QUICK_TAGS[sourceLang].forEach((tag, idx) => {
+          if (newInst.includes(tag)) {
+            newInst = newInst.split(tag).join(QUICK_TAGS[targetLang][idx]);
+          }
+        });
+        
+        CATEGORIES.forEach(cat => {
+          cat.options[sourceLang].forEach((opt, idx) => {
+            if (newInst.includes(opt)) {
+              newInst = newInst.split(opt).join(cat.options[targetLang][idx]);
+            }
+          });
+        });
+        
+        if (newInst !== instruction) {
+           setInstruction(newInst);
+        }
+      }, [lang]);
+
+      // --- Util / Toast ---
+      const showToast = (msg) => {
+        setToastMsg(msg);
+        setTimeout(() => setToastMsg(""), 4000);
+      };
+
+      // INIT API KEY FROM LOCAL STORAGE
+      useEffect(() => {
+        const savedKey = localStorage.getItem('banana_api_key');
+        if (savedKey) setApiKey(savedKey);
+      }, []);
+
+      const checkApiKey = () => {
+        const cleanKey = apiKey.trim();
+        if (!cleanKey) {
+          showToast(lang === 'fr' ? "CLÉ API REQUISE" : "API KEY REQUIRED");
+          setApiStatus('error');
+          setActiveTab('settings');
+          return false;
+        }
+        localStorage.setItem('banana_api_key', cleanKey);
+        return cleanKey;
+      };
+
+      useEffect(() => {
+        const saved = localStorage.getItem('banana_presets');
+        if(saved) setPresets(JSON.parse(saved));
+      }, []);
+
+      useEffect(() => {
+        const timer = setInterval(() => setCurrentTip(p => (p + 1) % t.tips.length), 8000);
+        return () => clearInterval(timer);
+      }, [t.tips.length]);
+
+      useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+        const handleWheelZoom = (e) => {
+          e.preventDefault();
+          const zoomFactor = 0.15;
+          const direction = e.deltaY > 0 ? -1 : 1;
+          setZoom(prev => Math.min(Math.max(prev + direction * zoomFactor, 0.3), 8));
+        };
+        container.addEventListener('wheel', handleWheelZoom, { passive: false });
+        return () => container.removeEventListener('wheel', handleWheelZoom);
+      }, [activeTab]);
+
+      // --- KEYBOARD MODIFIERS LISTENER ---
+      const updateModifiersFromEvent = (e) => {
+        const shift = e.shiftKey; 
+        const alt = e.altKey; 
+        const ctrl = e.ctrlKey || e.metaKey;
+        activeModifiersRef.current = { shift, alt, ctrl };
+        setModifiers(prev => {
+           if (prev.shift !== shift || prev.alt !== alt || prev.ctrl !== ctrl) {
+               return { shift, alt, ctrl };
+           }
+           return prev;
+        });
+      };
+
+      useEffect(() => {
+        window.addEventListener('keydown', updateModifiersFromEvent);
+        window.addEventListener('keyup', updateModifiersFromEvent);
+        window.addEventListener('mousemove', updateModifiersFromEvent);
+        return () => {
+          window.removeEventListener('keydown', updateModifiersFromEvent);
+          window.removeEventListener('keyup', updateModifiersFromEvent);
+          window.removeEventListener('mousemove', updateModifiersFromEvent);
+        };
+      }, []);
+
+      // --- KEYBOARD SHORTCUTS PRO ---
+      useEffect(() => {
+        const handleKeyDown = (e) => {
+          const activeTag = document.activeElement?.tagName;
+          if (['TEXTAREA', 'INPUT', 'SELECT'].includes(activeTag)) return; 
+
+          if (e.code === 'Space') { e.preventDefault(); setIsSpaceDown(true); }
+          if (e.key === '-' || e.key === '_') setBrushSize(p => Math.max(5, p - 5));
+          if (e.key === '+' || e.key === '=') setBrushSize(p => Math.min(150, p + 5));
+          if (e.key.toLowerCase() === 'b') setToolMode('brush');
+          if (e.key.toLowerCase() === 'e') setToolMode('eraser');
+          if (e.key.toLowerCase() === 'h') setToolMode('pan');
+          if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); handleUndo(); }
+          if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); if (imageResult) saveImageWithMeta(imageResult); }
+        };
+        const handleKeyUp = (e) => { 
+          if (e.code === 'Space') setIsSpaceDown(false); 
+        };
+        
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+        return () => { window.removeEventListener('keydown', handleKeyDown); window.removeEventListener('keyup', handleKeyUp); };
+      }, [imageResult, activeTab]);
+
+      useEffect(() => {
+        if (!isResizingSidebar) return;
+        const handleMouseMove = (e) => {
+          let newWidth = e.clientX - 80;
+          if (newWidth < 240) newWidth = 240;
+          if (newWidth > 600) newWidth = 600;
+          setSidebarWidth(newWidth);
+        };
+        const handleMouseUp = () => setIsResizingSidebar(false);
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+        return () => { document.removeEventListener('mousemove', handleMouseMove); document.removeEventListener('mouseup', handleMouseUp); };
+      }, [isResizingSidebar]);
+
+      // --- LOGIQUE MAGNÉTIQUE DE LA PALETTE D'OUTILS ---
+      useEffect(() => {
+        if (!isDraggingToolbar) return;
+        const handleMouseMove = (e) => {
+          if (!containerRef.current) return;
+          const containerRect = containerRef.current.getBoundingClientRect();
+          let newX = e.clientX - containerRect.left - dragOffset.current.x;
+          let newY = e.clientY - containerRect.top - dragOffset.current.y;
+          setToolbarPos({ x: newX, y: newY });
+        };
+        const handleMouseUp = (e) => {
+          setIsDraggingToolbar(false);
+          if (!toolbarRef.current || !containerRef.current) return;
+          const toolbarRect = toolbarRef.current.getBoundingClientRect();
+          const containerRect = containerRef.current.getBoundingClientRect();
+          const margin = 24;
+          
+          let newX = e.clientX - containerRect.left - dragOffset.current.x;
+          let newY = e.clientY - containerRect.top - dragOffset.current.y;
+          
+          if (newX < 100) newX = margin;
+          else if (newX > containerRect.width - toolbarRect.width - 100) newX = containerRect.width - toolbarRect.width - margin;
+          
+          if (newY < 40) newY = margin;
+          else if (newY > containerRect.height - toolbarRect.height - 40) newY = containerRect.height - toolbarRect.height - margin;
+          
+          setToolbarPos({ x: newX, y: newY });
+        };
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+        return () => {
+          document.removeEventListener('mousemove', handleMouseMove);
+          document.removeEventListener('mouseup', handleMouseUp);
+        };
+      }, [isDraggingToolbar]);
+
+      const handleToolbarMouseDown = (e) => {
+        setIsDraggingToolbar(true);
+        const rect = toolbarRef.current.getBoundingClientRect();
+        dragOffset.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      };
+
+      const clearCanvas = () => {
+        if (canvasRef.current) {
+          const ctx = canvasRef.current.getContext('2d');
+          ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+          setCanvasHistory([]);
+        }
+      };
+
+      const handleReset = () => {
+        setImages([]); setSelectedImageIndex(null); setImageResult(null); setInstruction("");
+        setPromptResult(""); setActiveAction(null); setStatus('idle'); setPanOffset({ x: 0, y: 0 }); setZoom(1);
+        setStyleRefIndex(null); setEnableOutpainting(false); setEnhancers({ upscale: false, raw: false, face: false, isolate: false });
+        setIsSplitMode(false);
+        setActiveTab('assets');
+        clearCanvas();
+        showToast(lang === 'fr' ? "ESPACE RÉINITIALISÉ" : "WORKSPACE CLEARED");
+      };
+
+      // FIX : On réinitialise l'image de Style (B) si on change l'image principale (A) pour éviter les conflits
+      useEffect(() => { clearCanvas(); setIsSplitMode(false); setStyleRefIndex(null); }, [selectedImageIndex]);
+
+      const saveCanvasState = () => {
+        if (canvasRef.current) {
+          setCanvasHistory(prev => [...prev, canvasRef.current.toDataURL()]);
+        }
+      };
+
+      const handleUndo = () => {
+        setCanvasHistory(prev => {
+          if (prev.length === 0) { clearCanvas(); return prev; }
+          const newHistory = [...prev];
+          newHistory.pop(); 
+          const lastState = newHistory[newHistory.length - 1];
+          const ctx = canvasRef.current.getContext('2d');
+          ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+          if (lastState) {
+            const img = new Image();
+            img.onload = () => { ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.drawImage(img, 0, 0); };
+            img.src = lastState;
+          }
+          return newHistory;
+        });
+      };
+
+      // --- AUTO-DETECT MODEL SCANNER ---
+      const testApiConnection = async () => {
+        const cleanKey = checkApiKey();
+        if (!cleanKey) return;
+        setApiStatus('testing');
+        setStatusMessage("FETCHING MODELS LIST...");
+        
+        try {
+          const response = await fetchWithBackoff(`https://generativelanguage.googleapis.com/v1beta/models?key=${cleanKey}`);
+          const data = await response.json();
+          
+          // On filtre pour ne garder que les modèles Gemini qui savent générer du contenu
+          let validModels = data.models
+              .filter(m => m.name.startsWith('models/gemini') && m.supportedGenerationMethods.includes('generateContent'))
+              .map(m => m.name.replace('models/', ''));
+
+          // On exclut les modèles "pro" pour économiser les crédits (sauf si on a QUE des modèles pro)
+          const nonProModels = validModels.filter(m => !m.includes('pro'));
+          if (nonProModels.length > 0) {
+              validModels = nonProModels;
+          }
+
+          if (validModels.length > 0) {
+              setAvailableModels(validModels);
+              // On privilégie le modèle le plus performant et moins gourmand en priorité absolue
+              const preferred = validModels.find(m => m === 'gemini-1.5-flash') 
+                             || validModels.find(m => m.includes('1.5-flash-8b'))
+                             || validModels.find(m => m.includes('flash')) 
+                             || validModels[0];
+              setSelectedModel(preferred);
+              setApiStatus('success'); 
+              setStatusMessage(`${validModels.length} MODELS FOUND`);
+          } else {
+              setApiStatus('error'); 
+              setStatusMessage("NO COMPATIBLE MODELS FOUND");
+          }
+        } catch (e) {
+          const errText = (e.message || "").toLowerCase();
+          setApiStatus('error'); 
+          setStatusMessage(errText ? errText.substring(0, 35).toUpperCase() : "NETWORK TIMEOUT");
+        }
+      };
+
+      const analyzeDNA = async () => {
+        const selectedImg = selectedImageIndex !== null ? images[selectedImageIndex] : images[0];
+        if (!selectedImg) { showToast("Image required!"); return; }
+        const cleanKey = checkApiKey();
+        if (!cleanKey) return;
+        
+        setStatus('processing');
+        setStatusMessage("ANALYZING IMAGE DNA...");
+
+        const promptText = `You are a professional Art Director. Analyze this image deeply. Output a raw JSON object EXACTLY matching this structure with no markdown or formatting around it: {"instruction": "Detailed visual description of the main subject and action", "camera": "Guess closest from 35mm Prime, 85mm Portrait, Drone Aerial View, etc.", "lighting": "Guess closest from Cinematic Lighting, Golden Hour, Neon Glow, etc.", "mood": "Guess mood", "artist": "Guess a known artist style", "render": "Guess render engine", "film": "Guess film stock"}. Ensure it's 100% valid JSON.`;
+
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${cleanKey}`;
+          const response = await fetchWithBackoff(url, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: promptText }, { inlineData: { mimeType: "image/jpeg", data: selectedImg.base64 } }] }],
+              generationConfig: { temperature: 0.2 }
+            })
+          });
+
+          const result = await response.json();
+          setTokensUsed(prev => prev + 350); // Approximated tokens used for analysis
+          
+          const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
+          const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const dna = JSON.parse(jsonMatch[0]);
+            if(dna.instruction) setInstruction(dna.instruction);
+            setMatrixSelection({
+              camera: dna.camera || "", lighting: dna.lighting || "", mood: dna.mood || "", 
+              artist: dna.artist || "", render: dna.render || "", film: dna.film || ""
+            });
+            showToast(lang === 'fr' ? "ADN EXTRAIT AVEC SUCCÈS" : "DNA EXTRACTED SUCCESSFULLY");
+          } else {
+            throw new Error("Failed to parse JSON");
+          }
+          setStatus('idle');
+        } catch(e) {
+          setStatus('error'); setStatusMessage("DNA ANALYSIS FAILED"); setTimeout(()=>setStatus('idle'),3000);
+        }
+      };
+
+      const autoMaskSubject = async () => {
+        const selectedImg = selectedImageIndex !== null ? images[selectedImageIndex] : images[0];
+        if (!selectedImg) { showToast("Image required!"); return; }
+        const cleanKey = checkApiKey();
+        if (!cleanKey) return;
+        
+        setStatus('processing');
+        setStatusMessage("AI SUBJECT ISOLATION...");
+
+        const promptText = `Find the main prominent subject in this image. Return its bounding box as a simple JSON array of 4 numbers [ymin, xmin, ymax, xmax], scaled from 0 to 1000. Do not include any text, just the JSON array. Example: [200, 300, 800, 700]`;
+
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${cleanKey}`;
+          const response = await fetchWithBackoff(url, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: promptText }, { inlineData: { mimeType: "image/jpeg", data: selectedImg.base64 } }] }],
+              generationConfig: { temperature: 0.1 }
+            })
+          });
+
+          const result = await response.json();
+          setTokensUsed(prev => prev + 250); // Approximated tokens
+          
+          const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
+          const arrMatch = rawText.match(/\[(.*?)\]/);
+          if (arrMatch) {
+            const [ymin, xmin, ymax, xmax] = JSON.parse(arrMatch[0]);
+            if (canvasRef.current) {
+              const ctx = canvasRef.current.getContext('2d');
+              const cw = canvasRef.current.width; const ch = canvasRef.current.height;
+              const x = (xmin / 1000) * cw; const y = (ymin / 1000) * ch;
+              const w = ((xmax - xmin) / 1000) * cw; const h = ((ymax - ymin) / 1000) * ch;
+              
+              saveCanvasState(); 
+              ctx.globalCompositeOperation = 'source-over';
+              ctx.fillStyle = brushColor.value;
+              ctx.globalAlpha = brushOpacity;
+              ctx.fillRect(x, y, w, h);
+              showToast(lang === 'fr' ? "SUJET MASQUÉ" : "SUBJECT MASKED");
+            }
+          }
+          setStatus('idle');
+        } catch(e) {
+          setStatus('error'); setStatusMessage("AUTO-MASK FAILED"); setTimeout(()=>setStatus('idle'),3000);
+        }
+      };
+
+      const runAction = async (mode = 'edit') => {
+        const selectedImg = selectedImageIndex !== null ? images[selectedImageIndex] : images[0];
+        if (!selectedImg) { setStatusMessage(lang === 'fr' ? "Image source requise." : "Image source required."); setStatus('error'); setTimeout(() => setStatus('idle'), 3000); return; }
+        const cleanKey = checkApiKey();
+        if (!cleanKey) return;
+
+        setStatus('processing');
+        setStatusMessage("PROCESSING DATA...");
+
+        const matrixStr = Object.entries(matrixSelection).filter(([_,v]) => v !== "").map(([k,v]) => `${k}: ${v}`).join(", ");
+        const outpaintStr = enableOutpainting ? "Perform outpainting. Fill aspect ratio gaps seamlessly." : "";
+        let enhStr = "";
+        if (enhancers.upscale) enhStr += " 8K high resolution masterpiece details. ";
+        if (enhancers.raw) enhStr += " RAW photorealistic DSLR look. ";
+        if (enhancers.face) enhStr += " Preserve exact facial identity. ";
+        if (enhancers.isolate) enhStr += " Isolate subject on studio background. ";
+
+        const fullPrompt = `[BANANA ENGINE] Directive: ${instruction}. Context: ${activeAction || 'Edit'}. Matrix: ${matrixStr}. Ratio: ${activeRatio.id}. ${outpaintStr} ${enhStr}`;
+
+        // 1. MODE PROMPT (Génération de Texte - utilise le modèle "flash" scanné)
+        if (mode === 'prompt') {
+          try {
+            const partsArray = [
+              { text: fullPrompt },
+              { inlineData: { mimeType: "image/jpeg", data: selectedImg.base64 } }
+            ];
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${cleanKey}`;
+            
+            const response = await fetchWithBackoff(url, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: partsArray }],
+                generationConfig: { temperature: advancedParams.temp, topP: advancedParams.topP }
+              })
+            });
+
+            const result = await response.json();
+            setPromptResult(result.candidates?.[0]?.content?.parts?.[0]?.text || "Error");
+            setTokensUsed(prev => prev + 400); // Tokens for prompt build
+            setActiveTab('studio');
+            setIsConsoleExpanded(true);
+            setStatus('success'); setTimeout(() => setStatus('idle'), 2000);
+          } catch (e) {
+            setStatus('error'); setStatusMessage("PROMPT FAILED"); setTimeout(() => setStatus('idle'), 3000);
+          }
+          return;
+        }
+
+        // 2. MODE EDIT (Édition exclusive via Nano Banana - 2.5-flash-image-preview)
+        try {
+          const partsArray = [
+            { text: fullPrompt + " Mode: edit." },
+            { inlineData: { mimeType: "image/jpeg", data: selectedImg.base64 } }
+          ];
+          if (styleRefIndex !== null && images[styleRefIndex]) {
+            partsArray.push({ text: "Apply STYLE from this image:" }, { inlineData: { mimeType: "image/jpeg", data: images[styleRefIndex].base64 } });
+          }
+
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${cleanKey}`;
+          
+          // isImage = true -> Extended timeout (45s) for heavy processing
+          const response = await fetchWithBackoff(url, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: partsArray }],
+              generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
+            })
+          }, true);
+
+          const result = await response.json();
+          const b64 = result.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+          
+          if (b64) {
+            const finalImageUrl = `data:image/png;base64,${b64}`;
+            setTokensUsed(prev => prev + 1800);
+            setImagesGenerated(prev => prev + 1);
+            
+            setModalImage(finalImageUrl);
+            setShowModal(true); // Ouvre la popup !
+            setHistoryLogs(prev => [{ id: Date.now(), url: finalImageUrl, prompt: instruction || activeAction || "Edit", time: new Date().toLocaleTimeString() }, ...prev]);
+            
+            setStatus('success'); setTimeout(() => setStatus('idle'), 2000);
+          } else {
+            throw new Error("NO_IMAGE_RETURNED");
+          }
+        } catch (e) {
+          setStatus('error');
+          console.error("RunAction Error:", e);
+          let msg = "CONNECTION FAILED";
+          
+          // Protection contre le crash e.message.toLowerCase()
+          const errText = (e.message || "").toLowerCase();
+          
+          if (errText.includes("api key not valid") || errText.includes("invalid key")) msg = "INVALID API KEY";
+          else if (errText.includes("modalities") || errText.includes("image")) msg = "MODEL CANNOT OUTPUT IMAGES";
+          else if (e.name === 'AbortError') msg = "REQUEST TIMEOUT";
+          else msg = (e.message || "UNKNOWN ERROR").substring(0, 40).toUpperCase();
+          
+          setStatusMessage(msg); setTimeout(() => setStatus('idle'), 6000);
+        }
+      };
+
+      const saveImageWithMeta = async (targetImageUrl = imageResult) => {
+        if (!targetImageUrl) return;
+        const metaObj = { instruction, matrixSelection, enhancers, activeRatio: activeRatio.id };
+        const metaStr = `BANANA_META_START${JSON.stringify(metaObj)}BANANA_META_END`;
+        
+        try {
+          const res = await fetch(targetImageUrl);
+          const blob = await res.blob();
+          const arrayBuffer = await blob.arrayBuffer();
+          
+          const encoder = new TextEncoder();
+          const metaBuffer = encoder.encode(metaStr);
+          
+          const combined = new Uint8Array(arrayBuffer.byteLength + metaBuffer.byteLength);
+          combined.set(new Uint8Array(arrayBuffer), 0);
+          combined.set(metaBuffer, arrayBuffer.byteLength);
+          
+          const finalBlob = new Blob([combined], { type: 'image/png' });
+          const url = URL.createObjectURL(finalBlob);
+          
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `banana-elite-${Date.now()}.png`;
+          a.click();
+          URL.revokeObjectURL(url);
+          showToast(lang === 'fr' ? "SAUVEGARDÉ AVEC MÉTA" : "SAVED WITH METADATA");
+        } catch (err) {
+          console.error("Save error:", err);
+        }
+      };
+
+      const handleImageExtraction = async (file) => {
+        try {
+          const text = await file.text();
+          const startIdx = text.indexOf('BANANA_META_START');
+          const endIdx = text.indexOf('BANANA_META_END');
+          if (startIdx !== -1 && endIdx !== -1) {
+            const jsonStr = text.substring(startIdx + 17, endIdx);
+            const meta = JSON.parse(jsonStr);
+            if (meta.instruction) setInstruction(meta.instruction);
+            if (meta.matrixSelection) setMatrixSelection(meta.matrixSelection);
+            if (meta.enhancers) setEnhancers(meta.enhancers);
+            if (meta.activeRatio) {
+              const ratio = RATIOS.find(r => r.id === meta.activeRatio);
+              if(ratio) setActiveRatio(ratio);
+            }
+            showToast(lang === 'fr' ? "RÉGLAGES RESTAURÉS DEPUIS L'IMAGE !" : "SETTINGS RESTORED FROM IMAGE!");
+            setIsConsoleExpanded(true);
+          }
+        } catch(e) { console.log("No metadata found"); }
+      };
+
+      const compressAndExtract = (file) => {
+        handleImageExtraction(file); 
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              const MAX = 1024;
+              let w = img.width, h = img.height;
+              if (w > h) { if (w > MAX) { h *= MAX/w; w = MAX; } }
+              else { if (h > MAX) { w *= MAX/h; h = MAX; } }
+              canvas.width = w; canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, w, h);
+              
+              let quality = 0.8;
+              let dataUrl = canvas.toDataURL('image/jpeg', quality);
+              
+              // SÉCURITÉ ABSOLUE : Si l'image encodée en base64 dépasse ~512 Ko (environ 682 666 caractères)
+              while (dataUrl.length > 682666 && quality > 0.1) {
+                quality -= 0.1;
+                dataUrl = canvas.toDataURL('image/jpeg', quality);
+              }
+              
+              resolve({ url: dataUrl, base64: dataUrl.split(',')[1] });
+            };
+          };
+        });
+      };
+
+      const onDrop = async (e) => {
+        e.preventDefault(); setIsDragging(false); setIsGlobalDragging(false);
+        const fileList = e.dataTransfer?.files || e.target?.files;
+        if (!fileList) return;
+        
+        const files = Array.from(fileList);
+        let currentImages = [...images];
+        
+        for (const file of files) {
+          if (!file.type.startsWith('image/')) continue;
+          
+          const duplicateIndex = currentImages.findIndex(img => img.name === file.name && img.size === file.size);
+          if (duplicateIndex !== -1) {
+              setSelectedImageIndex(duplicateIndex);
+              showToast(lang === 'fr' ? "IMAGE DÉJÀ IMPORTÉE" : "IMAGE ALREADY IMPORTED");
+              continue;
+          }
+
+          const opt = await compressAndExtract(file);
+          currentImages.push({ id: Math.random().toString(36).substr(2, 9), ...opt, name: file.name, size: file.size });
+        }
+        
+        if (currentImages.length > images.length) {
+            setImages(currentImages);
+            setSelectedImageIndex(currentImages.length - 1);
+        }
+      };
+
+      const effectiveTool = isSpaceDown ? 'pan' : toolMode;
+
+      const drawOverlay = () => {
+          const overlay = overlayCanvasRef.current;
+          if (!overlay) return;
+          const octx = overlay.getContext('2d');
+          octx.clearRect(0, 0, overlay.width, overlay.height);
+          if (currentStrokeRef.current.length === 0) return;
+
+          const canvasRect = overlay.getBoundingClientRect();
+          const scaleX = overlay.width / canvasRect.width;
+          
+          const mods = activeModifiersRef.current;
+          let isSubtract = effectiveTool === 'eraser';
+          if (mods.alt) isSubtract = true;
+          if (mods.shift) isSubtract = false;
+
+          octx.lineCap = 'round';
+          octx.lineJoin = 'round';
+          octx.lineWidth = (brushSize / zoom) * scaleX; 
+          
+          if (!isSubtract && brushSoftness > 0) {
+              octx.shadowBlur = (brushSoftness / zoom) * scaleX;
+              octx.shadowColor = brushColor.value;
+          } else {
+              octx.shadowBlur = 0;
+          }
+          octx.strokeStyle = isSubtract ? 'rgba(255,255,255,0.8)' : brushColor.value;
+
+          octx.beginPath();
+          currentStrokeRef.current.forEach((p, i) => {
+              if (i === 0) octx.moveTo(p.x, p.y);
+              else octx.lineTo(p.x, p.y);
+          });
+          octx.stroke();
+      };
+
+      const handleMouseDown = (e) => {
+        updateModifiersFromEvent(e);
+        const isAlt = e.altKey;
+        const isCtrl = e.ctrlKey || e.metaKey;
+        const isShift = e.shiftKey;
+
+        if (isAlt && isCtrl) e.preventDefault();
+        
+        setIsMouseDown(true);
+        lastMousePos.current = { x: e.clientX, y: e.clientY };
+        
+        const canvasRect = canvasRef.current.getBoundingClientRect();
+        const scaleX = canvasRef.current.width / canvasRect.width;
+        const scaleY = canvasRef.current.height / canvasRect.height;
+        const x = (e.clientX - canvasRect.left) * scaleX;
+        const y = (e.clientY - canvasRect.top) * scaleY;
+
+        if (isAlt && isCtrl && (effectiveTool === 'brush' || effectiveTool === 'eraser')) {
+            setIsAdjustingBrush(true);
+            return;
+        }
+
+        if (effectiveTool === 'brush' || effectiveTool === 'eraser') {
+          saveCanvasState(); 
+          currentStrokeRef.current = [{x, y}];
+          drawOverlay();
+        } else if (effectiveTool.startsWith('select-')) {
+          selectionModeRef.current = isAlt ? 'subtract' : 'add';
+          setSelectionStart({x, y});
+          setSelectionCurrent({x, y});
+          selectionPointsRef.current = [{x, y}];
+        }
+      };
+
+      const handleMouseMove = (e) => {
+        updateModifiersFromEvent(e);
+        if (containerRef.current) {
+          const rect = containerRef.current.getBoundingClientRect();
+          setCursorPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+        }
+        if (!isMouseDown) return;
+        const dx = e.clientX - lastMousePos.current.x;
+        const dy = e.clientY - lastMousePos.current.y;
+        lastMousePos.current = { x: e.clientX, y: e.clientY };
+        
+        if (isAdjustingBrush) {
+            setBrushSize(prev => Math.max(5, Math.min(500, prev + dx * 0.5)));
+            setBrushSoftness(prev => Math.max(0, Math.min(100, prev - dy * 0.5)));
+            return;
+        }
+
+        if (effectiveTool === 'pan') {
+          setPanOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+          return;
+        }
+
+        if (!canvasRef.current) return;
+        const canvasRect = canvasRef.current.getBoundingClientRect();
+        const scaleX = canvasRef.current.width / canvasRect.width;
+        const scaleY = canvasRef.current.height / canvasRect.height;
+        const x = (e.clientX - canvasRect.left) * scaleX;
+        const y = (e.clientY - canvasRect.top) * scaleY;
+
+        if (effectiveTool === 'brush' || effectiveTool === 'eraser') {
+          currentStrokeRef.current.push({x, y});
+          drawOverlay();
+        } else if (effectiveTool.startsWith('select-')) {
+          setSelectionCurrent({x, y});
+          if (effectiveTool === 'select-lasso') {
+            selectionPointsRef.current.push({x, y});
+          }
+        }
+      };
+
+      const handleMouseUp = (e) => {
+        if (e) updateModifiersFromEvent(e);
+        setIsMouseDown(false);
+        if (isAdjustingBrush) {
+            setIsAdjustingBrush(false);
+            return;
+        }
+
+        if (effectiveTool === 'brush' || effectiveTool === 'eraser') {
+          if (currentStrokeRef.current.length > 0 && canvasRef.current && overlayCanvasRef.current) {
+            const ctx = canvasRef.current.getContext('2d');
+            const mods = activeModifiersRef.current;
+            let isSubtract = effectiveTool === 'eraser';
+            if (mods.alt) isSubtract = true;
+            if (mods.shift) isSubtract = false;
+
+            ctx.globalCompositeOperation = isSubtract ? 'destination-out' : 'source-over';
+            ctx.globalAlpha = isSubtract ? 1 : brushOpacity;
+            ctx.drawImage(overlayCanvasRef.current, 0, 0);
+            
+            const octx = overlayCanvasRef.current.getContext('2d');
+            octx.clearRect(0, 0, overlayCanvasRef.current.width, overlayCanvasRef.current.height);
+            currentStrokeRef.current = [];
+          }
+        } else if (effectiveTool.startsWith('select-') && selectionStart && selectionCurrent) {
+          saveCanvasState();
+          const ctx = canvasRef.current.getContext('2d');
+          
+          const isSubtract = selectionModeRef.current === 'subtract';
+          ctx.globalCompositeOperation = isSubtract ? 'destination-out' : 'source-over';
+          ctx.globalAlpha = isSubtract ? 1 : brushOpacity;
+          ctx.fillStyle = isSubtract ? 'rgba(0,0,0,1)' : brushColor.value;
+          ctx.beginPath();
+
+          if (effectiveTool === 'select-rect') {
+              const x = Math.min(selectionStart.x, selectionCurrent.x);
+              const y = Math.min(selectionStart.y, selectionCurrent.y);
+              const w = Math.abs(selectionCurrent.x - selectionStart.x);
+              const h = Math.abs(selectionCurrent.y - selectionStart.y);
+              ctx.rect(x, y, w, h);
+          } else if (effectiveTool === 'select-ellipse') {
+              const x = Math.min(selectionStart.x, selectionCurrent.x);
+              const y = Math.min(selectionStart.y, selectionCurrent.y);
+              const w = Math.abs(selectionCurrent.x - selectionStart.x);
+              const h = Math.abs(selectionCurrent.y - selectionStart.y);
+              ctx.ellipse(x + w/2, y + h/2, w/2, h/2, 0, 0, 2 * Math.PI);
+          } else if (effectiveTool === 'select-lasso') {
+              selectionPointsRef.current.forEach((p, i) => {
+                  if (i === 0) ctx.moveTo(p.x, p.y);
+                  else ctx.lineTo(p.x, p.y);
+              });
+              ctx.closePath();
+          }
+          ctx.fill();
+
+          setSelectionStart(null);
+          setSelectionCurrent(null);
+          selectionPointsRef.current = [];
+        }
+      };
+
+      const SidebarTab = ({ id, icon, label, tooltipKey }) => (
+        <button onClick={() => setActiveTab(id)} className={`has-tooltip w-full flex flex-col items-center justify-center py-4 transition-all relative group ${activeTab === id ? 'text-amber-400' : 'text-slate-500 hover:text-slate-300'}`}>
+          <i className={`ph ${icon} text-xl mb-1.5`}></i>
+          <span className="text-[9px] font-bold uppercase tracking-widest">{label}</span>
+          {activeTab === id && <div className="absolute right-0 top-3 bottom-3 w-[3px] bg-amber-400 rounded-l-full shadow-[0_0_12px_#fbbf24]"></div>}
+          <div className="tooltip tooltip-right">{t.tooltips[tooltipKey]}</div>
+        </button>
+      );
+
+      const EnhancerButton = ({ id, icon, label, tooltipKey }) => (
+        <button onClick={() => setEnhancers(prev => ({ ...prev, [id]: !prev[id] }))} className={`has-tooltip relative px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase transition-all flex items-center gap-1.5 border ${enhancers[id] ? 'bg-amber-400/10 border-amber-400/50 text-amber-400 shadow-[0_0_10px_#fbbf2433]' : 'bg-black/30 border-white/5 text-slate-400 hover:border-white/20 hover:text-slate-200'}`}>
+          <i className={`ph ${icon} text-sm`}></i> {label}
+          <div className="tooltip tooltip-top">{t.tooltips[tooltipKey]}</div>
+        </button>
+      );
+
+      const activeMatrixTags = Object.entries(matrixSelection).filter(([k, v]) => v !== "");
+      
+      // Calcul des couleurs d'aperçu dynamique du curseur
+      const rgbMatch = brushColor.value.match(/\d+,\s*\d+,\s*\d+/);
+      const brushRgbString = rgbMatch ? rgbMatch[0] : '251, 191, 36';
+      
+      let isSubtractMode = effectiveTool === 'eraser';
+      if (modifiers.alt) isSubtractMode = true;
+      if (modifiers.shift) isSubtractMode = false;
+      const previewRgbStr = isSubtractMode ? '255, 255, 255' : brushRgbString;
+
+      return (
+        <div className="h-screen w-screen flex flex-col overflow-hidden select-none">
+          {/* TOASTER DISCRET EN BAS A DROITE */}
+          <div className={`fixed bottom-8 right-8 bg-amber-400 text-black px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all duration-300 z-[999] shadow-[0_10px_30px_rgba(0,0,0,0.8)] ${toastMsg ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
+            <div className="flex items-center gap-2"><i className="ph ph-info text-base"></i> {toastMsg}</div>
+          </div>
+
+          <header className="h-14 border-b border-white/5 bg-[#09090b] px-6 flex items-center justify-between z-50">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center border border-amber-400/20 bg-amber-400/5 shadow-inner">
+                  <BananaIcon className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <h1 className="text-[13px] font-black tracking-widest leading-none text-white">{t.title} <span className="text-amber-400 font-light italic">ELITE</span></h1>
+                  <p className="text-[8px] text-amber-400/50 uppercase tracking-[0.3em] font-medium mt-1 animate-pulse">{t.subtitle}</p>
+                </div>
+              </div>
+              <div className="h-5 w-[1px] bg-white/10 mx-2"></div>
+              <div className="flex items-center gap-5 text-[10px] font-medium text-slate-500 tracking-wider">
+                 <div className="flex items-center gap-2"><i className="ph ph-cloud"></i> <span>EU-SERVER-1</span></div>
+                 <div className="flex items-center gap-2">
+                   <i className={`ph ph-shield-check ${apiStatus === 'success' ? 'text-emerald-500' : apiStatus === 'error' ? 'text-red-500' : 'text-slate-600'}`}></i> 
+                   <span>{apiStatus === 'success' ? 'SECURE' : apiStatus === 'error' ? 'ERROR' : 'OFFLINE'}</span>
+                 </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              {/* NEW METRICS BADGE */}
+              <div className="flex items-center gap-3 bg-black/40 px-3 py-1.5 rounded-lg border border-white/5 text-[9px] font-mono font-bold tracking-widest text-slate-400">
+                <div className="flex items-center gap-1.5 has-tooltip relative">
+                  <i className="ph ph-coins text-amber-400 text-sm"></i>
+                  <span>{tokensUsed.toLocaleString()}</span>
+                  <div className="tooltip tooltip-bottom">{t.tooltips.tokens}</div>
+                </div>
+                <div className="w-px h-3 bg-white/10"></div>
+                <div className="flex items-center gap-1.5 has-tooltip relative">
+                  <i className="ph ph-image text-emerald-400 text-sm"></i>
+                  <span className={imagesGenerated > 80 ? "text-red-400" : ""}>{imagesGenerated} / 100</span>
+                  <div className="tooltip tooltip-bottom">{t.tooltips.images}</div>
+                </div>
+              </div>
+
+              <div className="flex bg-black/40 p-1 rounded-lg border border-white/5">
+                <button onClick={() => setLang('en')} className={`has-tooltip relative px-3 py-1.5 text-[9px] font-bold rounded-md transition-all ${lang === 'en' ? 'text-white bg-white/10' : 'text-slate-500 hover:text-white'}`}>
+                  EN <div className="tooltip tooltip-bottom">{t.tooltips.langEN}</div>
+                </button>
+                <button onClick={() => setLang('fr')} className={`has-tooltip relative px-3 py-1.5 text-[9px] font-bold rounded-md transition-all ${lang === 'fr' ? 'text-white bg-white/10' : 'text-slate-500 hover:text-white'}`}>
+                  FR <div className="tooltip tooltip-bottom">{t.tooltips.langFR}</div>
+                </button>
+              </div>
+              <button onClick={handleReset} className="has-tooltip relative p-2 text-slate-500 hover:text-amber-400">
+                <i className="ph ph-arrows-clockwise text-base"></i><div className="tooltip tooltip-bottom">{t.tooltips.reset}</div>
+              </button>
+            </div>
+          </header>
+
+          <main className="flex-1 flex overflow-hidden">
+            <nav className="w-20 border-r border-white/5 bg-[#09090b] flex flex-col items-center py-4 z-20">
+              <SidebarTab id="assets" icon="ph-database" label={t.nav.assets} tooltipKey="navAssets" />
+              <SidebarTab id="studio" icon="ph-aperture" label={t.nav.studio} tooltipKey="navStudio" />
+              <SidebarTab id="composer" icon="ph-sliders-horizontal" label={t.nav.composer} tooltipKey="navComposer" />
+              <SidebarTab id="history" icon="ph-clock-counter-clockwise" label={t.nav.history} tooltipKey="navHistory" />
+              <div className="mt-auto w-full"><SidebarTab id="settings" icon="ph-gear" label={t.nav.settings} tooltipKey="navSettings" /></div>
+            </nav>
+
+            <aside style={{ width: `${sidebarWidth}px`, minWidth: '240px', maxWidth: '600px' }} className="relative border-r border-white/5 bg-[#09090b] flex flex-col z-10 shadow-[20px_0_30px_-15px_rgba(0,0,0,0.5)]">
+              <div onMouseDown={(e) => { e.preventDefault(); setIsResizingSidebar(true); }} className="absolute top-0 -right-1 w-2.5 h-full cursor-col-resize z-50 flex items-center justify-center group">
+                 <div className="w-0.5 h-12 rounded-full bg-white/10 group-hover:bg-amber-400 transition-colors"></div>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar animate-in">
+                
+                {activeTab === 'assets' && (
+                  <div className="space-y-6">
+                    <label 
+                      onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                      onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+                      onDrop={onDrop}
+                      className={`has-tooltip group relative flex flex-col items-center justify-center w-full h-20 border border-dashed rounded-2xl cursor-pointer transition-all ${isDragging ? 'border-amber-400 bg-amber-400/10' : 'border-white/10 hover:border-amber-400 bg-black/20'}`}
+                    >
+                      <i className="ph ph-upload-simple text-xl mb-1 text-slate-500 group-hover:text-amber-400 transition-colors"></i>
+                      <span className="text-[10px] font-bold uppercase text-slate-400 group-hover:text-amber-400 transition-colors">Import Media</span>
+                      <input type="file" className="hidden" multiple onChange={onDrop} />
+                      <div className="tooltip tooltip-bottom">{t.tooltips.upload}</div>
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                       {images.map((img, idx) => (
+                         <div key={img.id} onClick={() => setSelectedImageIndex(idx)} className={`relative aspect-square rounded-xl overflow-hidden border cursor-pointer transition-all ${selectedImageIndex === idx ? 'border-amber-400 ring-2 ring-amber-400/30' : 'border-white/10 opacity-70 hover:opacity-100 hover:border-white/30'}`}>
+                            <img src={img.url} className="w-full h-full object-cover" />
+                            <button onClick={(e) => {e.stopPropagation(); setImages(images.filter(i => i.id !== img.id)); if(selectedImageIndex===idx) setSelectedImageIndex(null); }} className="absolute top-1.5 right-1.5 p-1 bg-black/80 rounded-md text-white opacity-0 hover:opacity-100 transition-opacity"><i className="ph ph-trash text-xs"></i></button>
+                         </div>
+                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'studio' && (
+                  <div className="space-y-6">
+                    <div className="bg-black/20 p-4 rounded-2xl border border-white/5">
+                      <div className="flex items-center gap-2 mb-3"><i className="ph ph-image-square text-slate-400"></i><span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{t.studio.styleRef}</span></div>
+                      {images.length < 2 ? (
+                        <div className="p-3 border border-dashed border-white/5 rounded-xl text-center text-slate-600 text-[9px] font-medium leading-relaxed">
+                          {lang === 'fr' ? "Uploadez une 2ème image dans Médias pour débloquer le transfert de style." : "Upload a 2nd image in Assets to unlock style transfer."}
+                        </div>
+                      ) : (
+                        <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                          <button onClick={() => setStyleRefIndex(null)} className={`flex-shrink-0 w-16 h-16 rounded-xl flex flex-col items-center justify-center text-[8px] font-bold uppercase border transition-all ${styleRefIndex === null ? 'border-amber-400 text-amber-400 bg-amber-400/10' : 'border-white/10 text-slate-500 bg-black/30 hover:border-white/30'}`}>
+                            <i className="ph ph-prohibit text-lg mb-1"></i> {lang === 'fr' ? 'Aucun' : 'None'}
+                          </button>
+                          {images.map((img, i) => i !== selectedImageIndex && (
+                            <button key={img.id} onClick={() => setStyleRefIndex(i)} className={`relative flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border transition-all ${styleRefIndex === i ? 'border-amber-400 ring-2 ring-amber-400/30 opacity-100 scale-105' : 'border-white/10 opacity-50 hover:opacity-100 hover:scale-95'}`}>
+                              <img src={img.url} className="w-full h-full object-cover" />
+                              {styleRefIndex === i && <div className="absolute top-0 right-0 bg-amber-400 text-black text-[7px] font-black px-1.5 py-0.5 rounded-bl-lg shadow-sm z-10">B (STYLE)</div>}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-1.5">
+                       {CATEGORIES.map(cat => (
+                         <div key={cat.id}>
+                            <button onClick={() => setActiveAction(activeAction === cat.id ? null : cat.id)} className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${activeAction === cat.id ? 'bg-amber-400/5 border-amber-400/30 text-amber-400' : 'bg-transparent border-white/5 text-slate-400 hover:border-white/10 hover:bg-white/5'}`}>
+                              <div className="flex items-center gap-3"><i className={`ph ${cat.icon} text-base`}></i><span className="text-[10px] font-medium">{cat.label[lang]}</span></div>
+                              <i className={`ph ph-caret-right text-xs transition-transform ${activeAction === cat.id ? 'rotate-90 text-amber-400' : ''}`}></i>
+                            </button>
+                            {activeAction === cat.id && (
+                              <div className="grid grid-cols-1 pl-9 mt-1 pb-3">{cat.options[lang].map(opt => (<button key={opt} onClick={() => { if(!instruction.includes(opt)) { setInstruction(prev => prev + (prev && !prev.endsWith(' ') ? ', ' : '') + opt); setIsConsoleExpanded(true); } }} className={`px-2 py-1.5 text-left text-[10px] transition-all ${instruction.includes(opt) ? 'text-amber-400/50 cursor-default' : 'text-slate-500 hover:text-amber-400'}`}>• {opt}</button>))}</div>
+                            )}
+                         </div>
+                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'composer' && (
+                  <div className="space-y-4">
+                    
+                    {/* DNA ANALYZER */}
+                    <button onClick={analyzeDNA} disabled={status === 'processing' || !images[0]} className="has-tooltip w-full py-3 mb-4 bg-[#09090b] border border-amber-400/30 text-amber-400 hover:bg-amber-400 hover:text-black disabled:opacity-50 rounded-xl font-black text-[10px] uppercase transition-all shadow-[0_0_15px_rgba(251,191,36,0.1)] flex items-center justify-center gap-2">
+                      <i className="ph ph-dna text-sm"></i> {t.analyze}
+                      <div className="tooltip tooltip-bottom">{t.tooltips.analyze}</div>
+                    </button>
+
+                    {/* PRESETS */}
+                    <div className="flex items-center gap-2 bg-black/20 p-2 rounded-2xl border border-white/5">
+                      <select onChange={(e) => {
+                        if(e.target.value) {
+                          const p = presets[e.target.value];
+                          setMatrixSelection(p.matrix); setInstruction(p.instruction || "");
+                          showToast("PRESET LOADED"); setIsConsoleExpanded(true);
+                        }
+                      }} className="flex-1 bg-transparent border-none px-3 py-2 text-[10px] font-bold uppercase text-slate-400 outline-none">
+                         <option value="">-- {t.presets} --</option>
+                         {presets.map((p, i) => <option key={i} value={i}>{p.name}</option>)}
+                      </select>
+                      <button onClick={() => {
+                        const presetName = `Preset ${presets.length + 1} (${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})})`;
+                        const newPresets = [...presets, { name: presetName, matrix: matrixSelection, instruction }];
+                        setPresets(newPresets);
+                        localStorage.setItem('banana_presets', JSON.stringify(newPresets));
+                        showToast("PRESET SAVED");
+                      }} className="bg-white/10 text-slate-300 px-3 py-2 rounded-xl hover:text-amber-400 transition-colors text-[10px] font-bold uppercase"><i className="ph ph-floppy-disk"></i></button>
+                    </div>
+                    
+                    <button onClick={() => {
+                      const rand = {};
+                      Object.keys(COMPOSER_MATRIX).forEach(k => {
+                        rand[k] = COMPOSER_MATRIX[k][Math.floor(Math.random() * COMPOSER_MATRIX[k].length)];
+                      });
+                      setMatrixSelection(rand);
+                      showToast(lang === 'fr' ? "STYLE ALÉATOIRE APPLIQUÉ" : "LUCKY STYLE APPLIED");
+                    }} className="w-full py-3 bg-white/5 border border-white/10 text-slate-300 hover:bg-amber-400/10 hover:border-amber-400/30 hover:text-amber-400 rounded-xl font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 group">
+                      <i className="ph ph-dice-five text-base group-hover:animate-spin"></i> {lang === 'fr' ? "Style Aléatoire (Dé)" : "Lucky Style"}
+                    </button>
+
+                    <div className="h-[1px] bg-white/5 w-full my-4"></div>
+
+                    {Object.entries(COMPOSER_MATRIX).map(([key, opts]) => {
+                      let iconName = "ph-palette";
+                      if(key === 'camera') iconName = "ph-camera";
+                      if(key === 'lighting') iconName = "ph-sun";
+                      if(key === 'render') iconName = "ph-cpu";
+                      if(key === 'film') iconName = "ph-video-camera";
+                      return (
+                        <div key={key} className="space-y-1.5">
+                           <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                             <i className={`ph ${iconName} text-sm text-slate-400`}></i>
+                             {t.composer[key] || key}
+                           </label>
+                           <select value={matrixSelection[key] || ""} onChange={(e) => setMatrixSelection({...matrixSelection, [key]: e.target.value})} className="w-full bg-black/20 border border-white/5 rounded-xl px-3 py-2.5 text-[11px] text-slate-200 font-bold outline-none focus:border-amber-400/50 transition-colors">
+                             <option value="">-- AUTO --</option>
+                             {opts.map(o => <option key={o} value={o}>{o}</option>)}
+                           </select>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {activeTab === 'history' && (
+                  <div className="space-y-6 animate-in">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Timeline</span>
+                      <span className="text-[9px] font-mono text-slate-400 bg-white/5 px-2 py-0.5 rounded-full">{historyLogs.length}</span>
+                    </div>
+                    <div className="space-y-3">
+                      {historyLogs.length === 0 ? (
+                        <p className="text-[10px] text-slate-500 italic">No generations yet.</p>
+                      ) : (
+                        historyLogs.map((log) => (
+                          <button key={log.id} onClick={() => { setImageResult(log.url); clearCanvas(); setIsSplitMode(false); }} className="w-full flex items-center gap-3 p-2 bg-black/20 hover:bg-white/5 border border-white/5 rounded-xl transition-all text-left group">
+                            <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border border-white/10 group-hover:border-amber-400/50">
+                              <img src={log.url} className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex-1 overflow-hidden">
+                              <p className="text-[10px] font-bold text-slate-300 truncate">{log.prompt}</p>
+                              <p className="text-[8px] text-slate-500 font-mono mt-0.5">{log.time}</p>
+                            </div>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'settings' && (
+                  <div className="space-y-8 animate-in">
+                    <div>
+                      <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">{t.api.secure}</span>
+                      <div className="mt-4 space-y-3">
+                        <div className="relative flex items-center bg-black/30 border border-white/5 rounded-xl overflow-hidden focus-within:border-amber-400/50 transition-all">
+                           <div className="pl-3 pr-2 text-slate-500"><i className="ph ph-key text-sm"></i></div>
+                           <input type={showKey ? "text" : "password"} value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="flex-1 bg-transparent py-3.5 text-[11px] text-slate-200 font-mono outline-none" placeholder="Paste your API Key here..." />
+                           <button onClick={() => setShowKey(!showKey)} className="px-4 text-slate-500 hover:text-white"><i className={`ph ${showKey ? 'ph-eye-slash' : 'ph-eye'}`}></i></button>
+                        </div>
+                        <button onClick={testApiConnection} className={`w-full py-3 border rounded-xl text-[9px] font-bold uppercase transition-all flex items-center justify-center gap-2 ${apiStatus === 'testing' ? 'bg-amber-400/10 border-amber-400/30 text-amber-400' : apiStatus === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : apiStatus === 'error' ? 'bg-red-500/10 border-red-500/30 text-red-400' : 'bg-black/20 border-white/5 text-slate-400 hover:text-white hover:border-white/20'}`}>
+                          <i className={`ph ${apiStatus === 'testing' ? 'ph-arrows-clockwise animate-spin' : apiStatus === 'success' ? 'ph-check-circle' : apiStatus === 'error' ? 'ph-warning-circle' : 'ph-activity'}`}></i> 
+                          {apiStatus === 'error' ? statusMessage : t.api.test}
+                        </button>
+
+                        {availableModels.length > 0 && (
+                          <div className="pt-4 border-t border-white/5 space-y-3 animate-in mt-4">
+                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Available Models</span>
+                            <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                              {availableModels.map(m => (
+                                <button 
+                                  key={m} 
+                                  onClick={() => setSelectedModel(m)}
+                                  className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${selectedModel === m ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-emerald-500/5 border-emerald-500/20 text-emerald-500/70 hover:border-emerald-500/40 hover:text-emerald-400 hover:bg-emerald-500/10'}`}
+                                >
+                                  <span className="text-[10px] font-mono font-bold">{m}</span>
+                                  {selectedModel === m && <i className="ph-fill ph-check-circle text-emerald-400 text-sm"></i>}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-6 border-t border-white/5 space-y-6">
+                      <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-2">Engine Parameters</span>
+                      <div className="space-y-6 bg-black/20 p-5 rounded-2xl border border-white/5">
+                        <div className="space-y-3">
+                          <div className="flex justify-between text-[9px] font-bold uppercase text-slate-500">
+                             <span className="has-tooltip relative border-b border-dashed border-slate-600 pb-0.5 cursor-help">{t.limits.daily}<div className="tooltip tooltip-top">{t.tooltips.dailyBudget}</div></span>
+                             <div className="flex items-center gap-1 bg-black/40 px-2 py-1 rounded-md border border-white/5 focus-within:border-amber-400/50">
+                               <input type="number" step="10000" value={advancedParams.dailyBudget} onChange={e=>setAdvancedParams({...advancedParams, dailyBudget: Number(e.target.value)})} className="bg-transparent w-16 text-right outline-none text-slate-300 font-mono text-[10px]" />
+                             </div>
+                          </div>
+                          <input type="range" min="50000" max="2000000" step="50000" value={advancedParams.dailyBudget} onChange={e => setAdvancedParams({...advancedParams, dailyBudget: parseInt(e.target.value)})} className="styled-slider w-full" />
+                        </div>
+                        <div className="space-y-3">
+                          <div className="flex justify-between text-[9px] font-bold uppercase text-slate-500">
+                             <span className="has-tooltip relative border-b border-dashed border-slate-600 pb-0.5 cursor-help">{t.limits.min}<div className="tooltip tooltip-top">{t.tooltips.callsMin}</div></span>
+                             <div className="flex items-center gap-1 bg-black/40 px-2 py-1 rounded-md border border-white/5 focus-within:border-amber-400/50">
+                               <input type="number" min="1" max="30" value={advancedParams.callsMin} onChange={e=>setAdvancedParams({...advancedParams, callsMin: Number(e.target.value)})} className="bg-transparent w-8 text-right outline-none text-slate-300 font-mono text-[10px]" />
+                             </div>
+                          </div>
+                          <input type="range" min="1" max="30" step="1" value={advancedParams.callsMin} onChange={e => setAdvancedParams({...advancedParams, callsMin: parseInt(e.target.value)})} className="styled-slider w-full" />
+                        </div>
+                      </div>
+
+                      <div className="space-y-6 bg-black/20 p-5 rounded-2xl border border-white/5">
+                        <div className="space-y-3">
+                          <div className="flex justify-between text-[9px] font-bold uppercase text-slate-500">
+                             <span className="has-tooltip relative border-b border-dashed border-slate-600 pb-0.5 cursor-help">{t.params.temp}<div className="tooltip tooltip-top">{t.tooltips.temp}</div></span>
+                             <div className="flex items-center gap-1 bg-black/40 px-2 py-1 rounded-md border border-white/5 focus-within:border-amber-400/50">
+                               <input type="number" step="0.1" min="0" max="1" value={advancedParams.temp} onChange={e=>setAdvancedParams({...advancedParams, temp: Number(e.target.value)})} className="bg-transparent w-8 text-right outline-none text-slate-300 font-mono text-[10px]" />
+                             </div>
+                          </div>
+                          <input type="range" min="0" max="1" step="0.1" value={advancedParams.temp} onChange={e => setAdvancedParams({...advancedParams, temp: parseFloat(e.target.value)})} className="styled-slider w-full" />
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <div className="flex justify-between text-[9px] font-bold uppercase text-slate-500">
+                             <span className="has-tooltip relative border-b border-dashed border-slate-600 pb-0.5 cursor-help">{t.params.topP}<div className="tooltip tooltip-top">{t.tooltips.topP}</div></span>
+                             <div className="flex items-center gap-1 bg-black/40 px-2 py-1 rounded-md border border-white/5 focus-within:border-amber-400/50">
+                               <input type="number" step="0.1" min="0" max="1" value={advancedParams.topP} onChange={e=>setAdvancedParams({...advancedParams, topP: Number(e.target.value)})} className="bg-transparent w-8 text-right outline-none text-slate-300 font-mono text-[10px]" />
+                             </div>
+                          </div>
+                          <input type="range" min="0" max="1" step="0.1" value={advancedParams.topP} onChange={e => setAdvancedParams({...advancedParams, topP: parseFloat(e.target.value)})} className="styled-slider w-full" />
+                        </div>
+
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center text-[9px] font-bold uppercase text-slate-500">
+                            <span className="has-tooltip relative border-b border-dashed border-slate-600 pb-0.5 cursor-help">{t.params.safety}<div className="tooltip tooltip-top">{t.tooltips.safety}</div></span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 bg-black/40 p-1.5 rounded-xl border border-white/5">
+                            {['off', 'std', 'max'].map(s => (
+                              <button key={s} onClick={() => setAdvancedParams({...advancedParams, safety: s})} className={`py-1.5 text-[9px] font-bold uppercase rounded-lg transition-all ${advancedParams.safety === s ? 'bg-white/10 text-white' : 'bg-transparent text-slate-600 hover:text-slate-300'}`}>{s}</button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* GLOBAL BRUSH CONFIG (Visible on all tabs except settings) */}
+              {activeTab !== 'settings' && (
+                <div className="p-4 border-t border-white/5 bg-black/40 shrink-0">
+                  <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-3 block">Brush Config</span>
+                  <div className="space-y-3.5">
+                    <div className="flex gap-2">
+                      {BRUSH_COLORS.map(c => (
+                        <button key={c.id} onClick={() => setBrushColor(c)} className={`w-4 h-4 rounded-full border-2 transition-all ${c.bg} ${brushColor.id === c.id ? 'border-white scale-110 shadow-[0_0_10px_rgba(255,255,255,0.3)]' : 'border-transparent opacity-50 hover:opacity-100'}`} />
+                      ))}
+                    </div>
+                    <div className="flex gap-4">
+                      <div className="flex-1 space-y-1.5">
+                        <div className="flex justify-between text-[8px] font-bold uppercase text-slate-500"><span>{t.studio.size}</span><span className="text-amber-400">{Math.round(brushSize)}px</span></div>
+                        <input type="range" min="5" max="500" value={brushSize} onChange={e => setBrushSize(parseInt(e.target.value))} className="styled-slider w-full" />
+                      </div>
+                      <div className="flex-1 space-y-1.5">
+                        <div className="flex justify-between text-[8px] font-bold uppercase text-slate-500"><span>{t.studio.softness}</span><span className="text-amber-400">{Math.round(brushSoftness)}</span></div>
+                        <input type="range" min="0" max="100" value={brushSoftness} onChange={e => setBrushSoftness(parseInt(e.target.value))} className="styled-slider w-full" />
+                      </div>
+                      <div className="flex-1 space-y-1.5">
+                        <div className="flex justify-between text-[8px] font-bold uppercase text-slate-500"><span>{t.studio.opac}</span><span className="text-amber-400">{Math.round(brushOpacity*100)}%</span></div>
+                        <input type="range" min="0.1" max="1" step="0.1" value={brushOpacity} onChange={e => setBrushOpacity(parseFloat(e.target.value))} className="styled-slider w-full" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </aside>
+
+            <section 
+              className="flex-1 bg-[#121214] flex flex-col relative overflow-hidden"
+              onDragEnter={(e) => { e.preventDefault(); setIsGlobalDragging(true); }}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={onDrop}
+            >
+              
+              {/* GLOBAL DROPZONE OVERLAY */}
+              {isGlobalDragging && (
+                <div 
+                   onDragLeave={(e) => { e.preventDefault(); setIsGlobalDragging(false); }}
+                   onDrop={onDrop}
+                   className="absolute inset-0 z-[999] bg-[#09090b]/80 backdrop-blur-md flex flex-col items-center justify-center m-4 rounded-[2rem] border-2 border-dashed border-amber-400 transition-all animate-in"
+                >
+                   <i className="ph ph-image text-6xl text-amber-400 mb-4 animate-bounce pointer-events-none"></i>
+                   <span className="text-amber-400 font-black tracking-[0.3em] text-lg uppercase drop-shadow-md pointer-events-none">
+                     {lang === 'fr' ? 'Glissez l\'image ici' : 'Drop Image Here'}
+                   </span>
+                </div>
+              )}
+
+              {/* PALETTE D'OUTILS FLOTTANTE & MAGNÉTIQUE (Glassmorphism) */}
+              <div 
+                ref={toolbarRef}
+                style={{ left: toolbarPos.x, top: toolbarPos.y }}
+                className={`absolute z-50 flex flex-col gap-2 bg-[#09090b]/40 backdrop-blur-2xl p-1.5 rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.6)]
+                  ${isDraggingToolbar ? 'cursor-grabbing' : 'transition-all duration-300 ease-out'}`}
+              >
+                 {/* DRAG HANDLE */}
+                 <div onMouseDown={handleToolbarMouseDown} className="w-full h-5 flex items-center justify-center cursor-grab hover:bg-white/5 rounded-t-xl mb-1 group">
+                    <div className="w-6 h-1 rounded-full bg-white/20 group-hover:bg-amber-400/50 transition-colors pointer-events-none"></div>
+                 </div>
+
+                 {/* SELECTION TOOLS */}
+                 <div className="has-tooltip relative">
+                    <button onClick={() => {setSelectMenuOpen(!selectMenuOpen); setRatioMenuOpen(false); setZoomMenuOpen(false);}} className="p-2.5 rounded-xl text-[10px] font-bold uppercase text-slate-400 hover:text-white hover:bg-white/5 transition-all w-full flex justify-center relative">
+                      <i className={`ph ${toolMode === 'select-ellipse' ? 'ph-circle-dashed' : toolMode === 'select-lasso' ? 'ph-lasso' : 'ph-bounding-box'} text-lg`}></i>
+                      <i className="ph-fill ph-caret-down text-[7px] absolute bottom-1.5 right-1.5 opacity-60"></i>
+                    </button>
+                    {!selectMenuOpen && <div className={`tooltip ${toolbarPos.x > 300 ? 'tooltip-left' : 'tooltip-right'}`}>{t.tooltips.selection}</div>}
+                    {selectMenuOpen && (
+                      <div className={`${toolbarPos.x > 300 ? 'absolute top-0 right-full mr-4' : 'absolute top-0 left-full ml-4'} w-32 bg-[#09090b] border border-white/10 rounded-xl shadow-2xl py-2 flex flex-col`}>
+                        <button onClick={() => { setToolMode('select-rect'); setSelectMenuOpen(false); }} className={`px-4 py-2 text-left text-[10px] font-bold uppercase tracking-wider flex items-center gap-3 ${toolMode === 'select-rect' ? 'bg-amber-400/10 text-amber-400' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}><i className="ph ph-bounding-box text-sm"></i> Rectangle</button>
+                        <button onClick={() => { setToolMode('select-ellipse'); setSelectMenuOpen(false); }} className={`px-4 py-2 text-left text-[10px] font-bold uppercase tracking-wider flex items-center gap-3 ${toolMode === 'select-ellipse' ? 'bg-amber-400/10 text-amber-400' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}><i className="ph ph-circle-dashed text-sm"></i> Ellipse</button>
+                        <button onClick={() => { setToolMode('select-lasso'); setSelectMenuOpen(false); }} className={`px-4 py-2 text-left text-[10px] font-bold uppercase tracking-wider flex items-center gap-3 ${toolMode === 'select-lasso' ? 'bg-amber-400/10 text-amber-400' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}><i className="ph ph-lasso text-sm"></i> Lasso</button>
+                      </div>
+                    )}
+                 </div>
+
+                 {/* RATIOS */}
+                 <div className="has-tooltip relative">
+                    <button onClick={() => {setRatioMenuOpen(!ratioMenuOpen); setZoomMenuOpen(false); setSelectMenuOpen(false);}} className="p-2.5 rounded-xl text-[10px] font-bold uppercase text-slate-400 hover:text-white hover:bg-white/5 transition-all w-full flex justify-center relative">
+                      <i className={`ph ${activeRatio.icon} text-lg`}></i>
+                      <i className="ph-fill ph-caret-down text-[7px] absolute bottom-1.5 right-1.5 opacity-60"></i>
+                    </button>
+                    {!ratioMenuOpen && <div className={`tooltip ${toolbarPos.x > 300 ? 'tooltip-left' : 'tooltip-right'}`}>{t.tooltips.format} : {activeRatio.id}</div>}
+                    {ratioMenuOpen && (
+                      <div className={`${toolbarPos.x > 300 ? 'absolute top-0 right-full mr-4' : 'absolute top-0 left-full ml-4'} w-48 bg-[#09090b] border border-white/10 rounded-xl shadow-2xl py-2 h-72 overflow-y-auto custom-scrollbar`}>
+                        {RATIOS.map(r => <button key={r.id} onClick={() => { setActiveRatio(r); setRatioMenuOpen(false); }} className={`w-full px-4 py-2 text-left text-[10px] font-bold uppercase tracking-wider flex items-center gap-3 ${activeRatio.id === r.id ? 'bg-amber-400/10 text-amber-400' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}><i className={`ph ${r.icon} text-sm opacity-70`}></i> {r.label}</button>)}
+                      </div>
+                    )}
+                 </div>
+                 
+                 <button onClick={() => setEnableOutpainting(!enableOutpainting)} className={`has-tooltip relative p-2.5 rounded-xl transition-all flex justify-center ${enableOutpainting ? 'bg-amber-400/10 text-amber-400' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+                   <i className="ph ph-arrows-out-simple text-lg"></i>
+                   <div className={`tooltip ${toolbarPos.x > 300 ? 'tooltip-left' : 'tooltip-right'}`}>{t.tooltips.outpaint}</div>
+                 </button>
+
+                 <div className="w-full h-px bg-white/5 my-1"></div>
+
+                 <button onClick={() => setToolMode('brush')} className={`has-tooltip relative p-2.5 rounded-xl transition-all flex justify-center ${effectiveTool === 'brush' ? 'bg-white/10 text-white shadow-inner' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+                   <i className="ph ph-paint-brush text-lg"></i>
+                   <div className={`tooltip ${toolbarPos.x > 300 ? 'tooltip-left' : 'tooltip-right'}`}>{t.tooltips.brush} (B)</div>
+                 </button>
+                 <button onClick={() => setToolMode('eraser')} className={`has-tooltip relative p-2.5 rounded-xl transition-all flex justify-center ${effectiveTool === 'eraser' ? 'bg-white/10 text-white shadow-inner' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+                   <i className="ph ph-eraser text-lg"></i>
+                   <div className={`tooltip ${toolbarPos.x > 300 ? 'tooltip-left' : 'tooltip-right'}`}>{t.tooltips.eraser} (E)</div>
+                 </button>
+                 <button onClick={() => setToolMode('pan')} className={`has-tooltip relative p-2.5 rounded-xl transition-all flex justify-center ${effectiveTool === 'pan' ? 'bg-white/10 text-white shadow-inner' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+                   <i className="ph ph-hand-grabbing text-lg"></i>
+                   <div className={`tooltip ${toolbarPos.x > 300 ? 'tooltip-left' : 'tooltip-right'}`}>{t.tooltips.pan} (H)</div>
+                 </button>
+                 
+                 <button onClick={autoMaskSubject} className="has-tooltip relative p-2.5 mt-1 rounded-xl text-slate-400 hover:text-amber-400 hover:bg-amber-400/10 transition-all border border-dashed border-white/10 flex justify-center">
+                   <i className="ph ph-magic-wand text-lg"></i><div className={`tooltip ${toolbarPos.x > 300 ? 'tooltip-left' : 'tooltip-right'}`}>{t.tooltips.autoMask}</div>
+                 </button>
+
+                 <div className="w-full h-px bg-white/5 my-1"></div>
+
+                 <div className="has-tooltip relative">
+                    <button onClick={() => {setZoomMenuOpen(!zoomMenuOpen); setRatioMenuOpen(false); setSelectMenuOpen(false);}} className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all w-full flex justify-center relative">
+                      <i className="ph ph-magnifying-glass text-lg"></i>
+                      <i className="ph-fill ph-caret-down text-[7px] absolute bottom-1.5 right-1.5 opacity-60"></i>
+                    </button>
+                    {!zoomMenuOpen && <div className={`tooltip ${toolbarPos.x > 300 ? 'tooltip-left' : 'tooltip-right'}`}>{t.tooltips.zoom}</div>}
+                    {zoomMenuOpen && (
+                      <div className={`${toolbarPos.x > 300 ? 'absolute top-0 right-full mr-4' : 'absolute top-0 left-full ml-4'} w-48 bg-[#09090b] border border-white/10 rounded-xl shadow-2xl p-4 flex items-center gap-3`}>
+                         <input type="range" min="30" max="800" value={Math.round(zoom*100)} onChange={e => setZoom(Math.max(30, Math.min(800, Number(e.target.value)))/100)} className="styled-slider flex-1" />
+                         <span className="text-[10px] font-mono text-amber-400 w-10 text-right">{Math.round(zoom*100)}%</span>
+                      </div>
+                    )}
+                 </div>
+                 
+                 <button onClick={handleUndo} className="has-tooltip relative p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all flex justify-center">
+                   <i className="ph ph-arrow-u-up-left text-lg"></i>
+                   <div className={`tooltip ${toolbarPos.x > 300 ? 'tooltip-left' : 'tooltip-right'}`}>{t.tooltips.undo}</div>
+                 </button>
+                 <button onClick={clearCanvas} className="has-tooltip relative p-2.5 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-all flex justify-center">
+                   <i className="ph ph-trash text-lg"></i>
+                   <div className={`tooltip ${toolbarPos.x > 300 ? 'tooltip-left' : 'tooltip-right'}`}>Clear Canvas</div>
+                 </button>
+              </div>
+
+              {/* SPLIT BUTTON (Top Center Contextual) */}
+              {imageResult && (
+                <div className="absolute top-6 left-1/2 -translate-x-1/2 z-40">
+                  <button onClick={() => setIsSplitMode(!isSplitMode)} className={`has-tooltip px-6 py-2.5 rounded-full font-bold text-[10px] uppercase tracking-widest border transition-all flex items-center gap-2 ${isSplitMode ? 'bg-amber-400 text-black border-amber-400 shadow-[0_0_15px_#fbbf2466]' : 'bg-[#09090b]/80 text-amber-400 border-amber-400/30 hover:bg-amber-400/10'}`}>
+                    <i className="ph ph-split-vertical mr-2"></i> {t.studio.split}
+                    <div className="tooltip tooltip-bottom">{t.tooltips.split}</div>
+                  </button>
+                </div>
+              )}
+
+              <div ref={containerRef} 
+                   className={`relative w-full flex-1 flex items-center justify-center overflow-hidden ${effectiveTool === 'pan' ? (isMouseDown ? 'cursor-grabbing' : 'cursor-grab') : effectiveTool.startsWith('select-') ? 'cursor-crosshair' : 'cursor-none'}`} 
+                   onContextMenu={(e) => { e.preventDefault(); }} 
+                   onMouseDown={handleMouseDown} 
+                   onMouseMove={handleMouseMove} 
+                   onMouseUp={handleMouseUp} 
+                   onMouseLeave={handleMouseUp}>
+                
+                {!images[selectedImageIndex] ? (
+                  <div className="flex flex-col items-center text-slate-700">
+                    <i className="ph ph-image text-8xl mb-4"></i>
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Awaiting Content</span>
+                  </div>
+                ) : (
+                  <div style={{ transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom})`, transformOrigin: 'center center' }} className="relative pointer-events-none">
+                     
+                     {/* A (SOURCE) BADGE */}
+                     <div className="absolute -top-6 left-0 text-[8px] font-black uppercase text-slate-500 tracking-widest pointer-events-none">A (Source)</div>
+
+                     <div className="relative flex-shrink-0 shadow-[0_20px_50px_rgba(0,0,0,0.8)] bg-[#1a1a1f] ring-1 ring-amber-400/30 overflow-hidden pointer-events-auto" 
+                          style={{ height: '65vh', aspectRatio: activeRatio.id.replace(':', '/'), backgroundImage: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.03) 75%, rgba(255,255,255,0.03)), repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.03) 75%, rgba(255,255,255,0.03))', backgroundPosition: '0 0, 10px 10px', backgroundSize: '20px 20px' }}>
+                        
+                       {/* SPLIT SCREEN MODE OR NORMAL MODE */}
+                       {isSplitMode && imageResult ? (
+                         <div className="relative w-full h-full">
+                            <img src={images[selectedImageIndex]?.url} className="absolute inset-0 w-full h-full object-contain" draggable="false" />
+                            <img src={imageResult} style={{ clipPath: `inset(0 ${100 - splitPosition}% 0 0)` }} className="absolute inset-0 w-full h-full object-contain" draggable="false" />
+                            <input type="range" min="0" max="100" value={splitPosition} onChange={(e)=>setSplitPosition(e.target.value)} className="split-slider pointer-events-auto" />
+                            <div className="absolute top-0 bottom-0 w-[2px] bg-white pointer-events-none shadow-[0_0_10px_rgba(0,0,0,0.5)]" style={{ left: `${splitPosition}%` }}>
+                               <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-6 h-6 bg-white rounded-full flex items-center justify-center text-black shadow-lg"><i className="ph ph-caret-left-right text-xs"></i></div>
+                            </div>
+                         </div>
+                       ) : (
+                         <>
+                           <img src={imageResult || images[selectedImageIndex]?.url} className="absolute inset-0 w-full h-full object-contain pointer-events-none" draggable="false" />
+                           <canvas ref={canvasRef} width={canvasRes.w} height={canvasRes.h} className="absolute inset-0 w-full h-full z-20 pointer-events-none opacity-80" />
+                           <canvas ref={overlayCanvasRef} width={canvasRes.w} height={canvasRes.h} className="absolute inset-0 w-full h-full z-21 pointer-events-none" style={{ opacity: effectiveTool === 'eraser' ? 1 : brushOpacity }} />
+                           
+                           {selectionStart && selectionCurrent && (
+                             <svg className="absolute inset-0 w-full h-full pointer-events-none z-30" viewBox={`0 0 ${canvasRes.w} ${canvasRes.h}`} preserveAspectRatio="none">
+                                {effectiveTool === 'select-rect' && (
+                                   <g>
+                                      <rect x={Math.min(selectionStart.x, selectionCurrent.x)} y={Math.min(selectionStart.y, selectionCurrent.y)} width={Math.abs(selectionCurrent.x - selectionStart.x)} height={Math.abs(selectionCurrent.y - selectionStart.y)} className="ants-black" />
+                                      <rect x={Math.min(selectionStart.x, selectionCurrent.x)} y={Math.min(selectionStart.y, selectionCurrent.y)} width={Math.abs(selectionCurrent.x - selectionStart.x)} height={Math.abs(selectionCurrent.y - selectionStart.y)} className="ants-white" />
+                                   </g>
+                                )}
+                                {effectiveTool === 'select-ellipse' && (
+                                   <g>
+                                      <ellipse cx={(selectionStart.x + selectionCurrent.x)/2} cy={(selectionStart.y + selectionCurrent.y)/2} rx={Math.abs(selectionCurrent.x - selectionStart.x)/2} ry={Math.abs(selectionCurrent.y - selectionStart.y)/2} className="ants-black" />
+                                      <ellipse cx={(selectionStart.x + selectionCurrent.x)/2} cy={(selectionStart.y + selectionCurrent.y)/2} rx={Math.abs(selectionCurrent.x - selectionStart.x)/2} ry={Math.abs(selectionCurrent.y - selectionStart.y)/2} className="ants-white" />
+                                   </g>
+                                )}
+                                {effectiveTool === 'select-lasso' && (
+                                   <g>
+                                      <polyline points={selectionPointsRef.current.map(p => `${p.x},${p.y}`).join(' ')} className="ants-black" />
+                                      <polyline points={selectionPointsRef.current.map(p => `${p.x},${p.y}`).join(' ')} className="ants-white" />
+                                   </g>
+                                )}
+                             </svg>
+                           )}
+                         </>
+                       )}
+                     </div>
+                  </div>
+                )}
+
+                {/* BRUSH CURSOR VISUALIZATION (LIKE PHOTOSHOP) */}
+                {(effectiveTool === 'brush' || effectiveTool === 'eraser') && (!isMouseDown || isAdjustingBrush) && !isSplitMode && (
+                  <div className="absolute pointer-events-none z-[60] flex items-center justify-center" 
+                       style={{ left: cursorPos.x, top: cursorPos.y, transform: 'translate(-50%, -50%)' }}>
+                     
+                     {/* True Gradient Preview for Softness & Size */}
+                     <div className="absolute rounded-full" 
+                          style={{ 
+                            width: brushSize, 
+                            height: brushSize, 
+                            background: `radial-gradient(circle, rgba(${previewRgbStr}, ${isAdjustingBrush ? 0.6 : 0.15}) ${Math.max(0, 100 - brushSoftness)}%, rgba(${previewRgbStr}, 0) 100%)` 
+                          }} />
+
+                     {/* Crosshair (Always visible for precision) */}
+                     <div className="w-[10px] h-[10px] flex items-center justify-center opacity-90 mix-blend-difference z-10">
+                         <div className="w-full h-[1px] bg-white absolute"></div>
+                         <div className="w-[1px] h-full bg-white absolute"></div>
+                     </div>
+
+                     {/* Outer Boundary */}
+                     <div className="absolute rounded-full border shadow-[0_0_2px_rgba(0,0,0,0.5)]" 
+                          style={{ width: brushSize, height: brushSize, borderColor: `rgba(${previewRgbStr}, 0.5)` }} />
+                  </div>
+                )}
+                
+                {/* MODIFIER KEY VISUALIZATION (+ / -) */}
+                {(effectiveTool.startsWith('select-') || effectiveTool === 'brush' || effectiveTool === 'eraser') && (!isMouseDown) && !isSplitMode && (
+                  <div className="absolute pointer-events-none z-[61] font-black text-[18px] drop-shadow-[0_0_3px_rgba(0,0,0,1)] text-white" 
+                       style={{ left: cursorPos.x + 15, top: cursorPos.y + 15 }}>
+                      {modifiers.alt ? '-' : (modifiers.shift ? '+' : '')}
+                  </div>
+                )}
+
+                {status === 'processing' && (
+                  <div className="absolute inset-0 bg-[#09090b]/80 backdrop-blur-md z-[100] flex flex-col items-center justify-center animate-in">
+                     <i className="ph ph-circle-notch text-4xl text-amber-400 animate-spin mb-4"></i>
+                     <span className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-400 animate-pulse">{statusMessage}</span>
+                  </div>
+                )}
+                {status === 'error' && (
+                  <div className="absolute inset-0 bg-[#09090b]/90 backdrop-blur-md z-[100] flex flex-col items-center justify-center animate-in">
+                     <i className="ph ph-warning-octagon text-5xl text-red-500 mb-4"></i>
+                     <span className="text-[11px] font-black uppercase tracking-widest text-white">{statusMessage}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* CONSOLE AREA (COLLAPSIBLE - UX 2) */}
+              <div className={`w-full max-w-4xl mx-auto relative z-30 px-4 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${isConsoleExpanded ? 'pb-6' : 'pb-0'}`}>
+                
+                {/* PROMPT OUTPUT DRAWER */}
+                {promptResult && activeTab === 'studio' && isConsoleExpanded && (
+                  <div className="mb-4 bg-white/5 border border-white/10 rounded-2xl p-4 relative group animate-in">
+                    <p className="text-[11px] text-slate-300 font-mono select-all pr-8">"{promptResult}"</p>
+                    <button onClick={() => setPromptResult("")} className="absolute top-4 right-4 text-slate-500 hover:text-white"><i className="ph ph-x"></i></button>
+                  </div>
+                )}
+
+                <div className="bg-[#09090b]/90 backdrop-blur-2xl border border-white/10 rounded-t-[1.5rem] rounded-b-[1.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.5)] transition-all flex flex-col overflow-hidden">
+                   
+                   {/* CONSOLE HEADER (Always visible) */}
+                   <div onClick={() => setIsConsoleExpanded(!isConsoleExpanded)} className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 transition-colors">
+                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        <i className="ph ph-terminal-window text-base text-amber-400"></i> PROMPT CONSOLE
+                      </div>
+                      <div className="flex items-center gap-4">
+                        {!isConsoleExpanded && instruction && <span className="text-[10px] text-slate-500 font-mono truncate max-w-xs">"{instruction}"</span>}
+                        <i className={`ph ph-caret-${isConsoleExpanded ? 'down' : 'up'} text-slate-500`}></i>
+                      </div>
+                   </div>
+
+                   {/* CONSOLE BODY */}
+                   <div className={`transition-all duration-300 ease-in-out ${isConsoleExpanded ? 'max-h-[500px] opacity-100 pb-4 px-4' : 'max-h-0 opacity-0 pointer-events-none'}`}>
+                     <div className="flex items-center gap-2 mb-3 px-2 text-slate-500 text-[9px] font-bold uppercase tracking-widest">
+                       <i className="ph ph-lightbulb text-amber-400"></i> Tip: {t.tips[currentTip]}
+                     </div>
+
+                     {/* Affichage des tags sélectionnés dans le Composer */}
+                     {activeMatrixTags.length > 0 && (
+                       <div className="flex gap-2 pb-3 mb-2 overflow-x-auto custom-scrollbar border-b border-white/5">
+                         {activeMatrixTags.map(([k, v]) => (
+                            <span key={k} className="px-2 py-1 bg-amber-400/10 border border-amber-400/30 rounded-md text-[8px] font-mono text-amber-400 uppercase whitespace-nowrap">{v}</span>
+                         ))}
+                       </div>
+                     )}
+
+                     {/* Affichage des Quick Tags en un clic (Prévention des doublons) */}
+                     <div className="flex gap-2 overflow-x-auto pb-3 custom-scrollbar mb-1">
+                        {QUICK_TAGS[lang].map((tag) => {
+                          const isIncluded = instruction.includes(tag);
+                          return (
+                            <button key={tag} onClick={() => { if(!isIncluded) setInstruction(p => p + (p && !p.endsWith(' ') ? ', ' : '') + tag); }} className={`whitespace-nowrap px-3 py-1.5 rounded-full border text-[9px] font-bold uppercase tracking-tighter transition-all ${isIncluded ? 'border-amber-400/20 text-amber-400/50 cursor-default bg-amber-400/5' : 'border-white/10 text-slate-500 hover:text-amber-400 hover:border-amber-400/40 hover:bg-amber-400/10'}`}>
+                              # {tag}
+                            </button>
+                          );
+                        })}
+                     </div>
+
+                     <textarea value={instruction} onChange={(e) => setInstruction(e.target.value)} placeholder={t.placeholder} className="w-full bg-black/20 border border-white/5 rounded-xl text-slate-200 text-[13px] outline-none min-h-[90px] placeholder:text-slate-600 p-3 custom-scrollbar focus:border-amber-400/50 transition-colors" />
+                     
+                     <div className="flex items-center justify-between pt-3 mt-1">
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-[50%] custom-scrollbar">
+                           <EnhancerButton id="upscale" icon="ph-corners-out" label={t.enhancers.upscale} tooltipKey="upscale" />
+                           <EnhancerButton id="raw" icon="ph-camera" label={t.enhancers.raw} tooltipKey="raw" />
+                           <EnhancerButton id="face" icon="ph-fingerprint" label={t.enhancers.face} tooltipKey="face" />
+                           <EnhancerButton id="isolate" icon="ph-crosshair" label={t.enhancers.isolate} tooltipKey="isolate" />
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {instruction && (
+                            <button onClick={() => setInstruction("")} className="has-tooltip relative text-[10px] font-bold uppercase text-slate-500 hover:text-white px-2 py-2">Clear<div className="tooltip tooltip-top">{t.tooltips.clear}</div></button>
+                          )}
+                          {imageResult && (
+                            <button onClick={() => saveImageWithMeta(imageResult)} className="has-tooltip relative px-5 py-2.5 bg-white/5 text-slate-300 border border-white/10 rounded-xl text-[10px] font-bold uppercase hover:bg-white/10 hover:text-white transition-all flex items-center gap-2"><i className="ph ph-download-simple text-sm"></i> Save<div className="tooltip tooltip-top">{t.tooltips.save} (Ctrl+S)</div></button>
+                          )}
+                          <button onClick={() => runAction(activeTab === 'composer' ? 'prompt' : 'edit')} disabled={status === 'processing' || (!instruction && !activeAction && activeTab !== 'composer')} className="has-tooltip relative px-8 py-3 bg-amber-400 text-black rounded-xl font-black text-[10px] uppercase shadow-[0_0_20px_rgba(251,191,36,0.3)] hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 transition-all flex items-center gap-2">
+                            <i className="ph ph-magic-wand text-sm"></i> {activeTab === 'composer' ? t.build : t.generate}
+                            <div className="tooltip tooltip-top">{t.tooltips.process}</div>
+                          </button>
+                        </div>
+                     </div>
+                   </div>
+                </div>
+              </div>
+            </section>
+          </main>
+
+          {/* MODAL POPUP POUR LE RENDU FINAL */}
+          {showModal && modalImage && (
+            <div className="fixed inset-0 z-[1000] bg-[#09090b]/80 backdrop-blur-xl flex items-center justify-center animate-in p-6">
+              <div className="bg-[#121214] border border-white/10 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] flex flex-col max-w-5xl w-full max-h-full overflow-hidden">
+                <div className="flex items-center justify-between p-5 border-b border-white/5 bg-black/20">
+                  <h3 className="text-white font-black tracking-widest text-[11px] uppercase flex items-center gap-2">
+                    <i className="ph-fill ph-sparkle text-amber-400 text-base"></i> {lang === 'fr' ? 'Rendu Terminé' : 'Render Complete'}
+                  </h3>
+                  <button onClick={() => setShowModal(false)} className="text-slate-500 hover:text-white transition-colors">
+                    <i className="ph ph-x text-xl"></i>
+                  </button>
+                </div>
+                
+                <div className="flex-1 overflow-hidden p-6 flex items-center justify-center bg-[radial-gradient(circle,rgba(255,255,255,0.03)_1px,transparent_1px)]" style={{ backgroundSize: '20px 20px' }}>
+                   <img src={modalImage} className="max-w-full max-h-[60vh] object-contain rounded-xl shadow-2xl ring-1 ring-white/10" draggable="false" />
+                </div>
+                
+                <div className="p-5 border-t border-white/5 flex items-center justify-between bg-black/40">
+                   <button onClick={() => setShowModal(false)} className="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-red-400 transition-colors px-4 py-2">
+                     {lang === 'fr' ? 'Annuler' : 'Discard'}
+                   </button>
+                   <div className="flex items-center gap-3">
+                      <button onClick={() => saveImageWithMeta(modalImage)} className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-bold uppercase tracking-widest text-slate-300 hover:bg-white/10 hover:text-white transition-all flex items-center gap-2">
+                        <i className="ph ph-download-simple text-base"></i> {lang === 'fr' ? 'Télécharger HD' : 'Download HD'}
+                      </button>
+                      <button onClick={() => { setImageResult(modalImage); setIsSplitMode(true); setShowModal(false); }} className="px-8 py-3 bg-amber-400 text-black rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 shadow-[0_0_20px_rgba(251,191,36,0.3)] transition-all flex items-center gap-2">
+                        <i className="ph-fill ph-check-circle text-base"></i> {lang === 'fr' ? 'Appliquer au Canvas' : 'Apply to Canvas'}
+                      </button>
+                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
